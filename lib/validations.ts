@@ -42,6 +42,7 @@ export const ListingSchema = z.object({
     .min(100, 'السعر يجب أن يكون 100 درهم على الأقل')
     .max(50000, 'السعر مرتفع جداً'),
   gender_preference: z.enum(['any', 'male', 'female']),
+  tags: z.array(z.string()).optional(),
 })
 
 export type RegisterFormData = z.infer<typeof RegisterSchema>

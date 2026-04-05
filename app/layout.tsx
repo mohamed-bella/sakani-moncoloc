@@ -74,7 +74,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         {/* Sticky Header - Navbar handles its own positioning */}
         <Navbar />
 
-
         {/* Main Content Area */}
         <main className="flex-grow pb-[80px] md:pb-0">
           {children}

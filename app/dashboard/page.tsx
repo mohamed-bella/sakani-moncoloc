@@ -124,6 +124,7 @@ export default async function DashboardPage(props: {
                     listingId={listing.id} 
                     currentStatus={listing.status} 
                     isLocked={listing.locked_by_admin}
+                    bumpedAt={listing.bumped_at}
                   />
                 </div>
 

@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { v4 as uuidv4 } from 'uuid'
 import { ListingSchema, type ListingFormData } from '@/lib/validations'
 import { createClient } from '@/lib/supabase/client'
-import { CITIES } from '@/types'
+import { CITIES, LIFESTYLE_TAGS } from '@/types'
 import imageCompression from 'browser-image-compression'
 import ImageUploader from '@/components/ImageUploader'
 
@@ -33,6 +33,7 @@ export default function PostListingForm({ onSuccess }: PostListingFormProps) {
       type: 'room_available',
       city: 'Agadir',
       gender_preference: 'any',
+      tags: [],
     },
   })
 
@@ -186,11 +187,41 @@ export default function PostListingForm({ onSuccess }: PostListingFormProps) {
 
         <hr className="border-[#f0f2f5]" />
 
-        {/* SECTION 3: Story & Photos */}
+        {/* SECTION 3: Tags & Lifestyle */}
+        <div className="space-y-6">
+          <h2 className="text-xl font-black text-[#1c1c1c] text-center mb-2">نمط الحياة والمميزات</h2>
+          <p className="text-[#787C7E] text-xs text-center mb-4 font-bold">حدد ما يناسبك لزيادة فرصة التوافق</p>
+          <div className="flex flex-wrap gap-2 justify-end" dir="rtl">
+            {LIFESTYLE_TAGS.map(tag => {
+              const currentTags = watch('tags') || [];
+              const isSelected = currentTags.includes(tag);
+              return (
+                <label 
+                  key={tag} 
+                  className={`cursor-pointer px-3 py-1.5 rounded-full border-2 text-xs font-bold transition-all ${
+                    isSelected 
+                      ? 'bg-[#0079D3] border-[#0079D3] text-white shadow-sm scale-105' 
+                      : 'bg-white border-[#edeff1] text-[#787C7E] hover:border-[#0079D3]/50 hover:bg-[#f6f7f8]'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    value={tag}
+                    {...register('tags')}
+                    className="sr-only"
+                  />
+                  {tag}
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        <hr className="border-[#f0f2f5]" />
+
+        {/* SECTION 4: Story & Photos */}
         <div className="space-y-6">
           <h2 className="text-xl font-black text-[#1c1c1c] text-center mb-6">الوصف والصور</h2>
-
-
 
           <div>
             <label className="block text-sm font-bold text-[#1c1c1c] mb-2 text-right">وصف تفصيلي <span className="text-[#FF4500]">*</span></label>

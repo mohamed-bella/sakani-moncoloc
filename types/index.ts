@@ -27,6 +27,8 @@ export interface Listing {
   whatsapp_click_count: number
   created_at: string
   updated_at: string
+  bumped_at?: string
+  tags?: string[]
   // Joined from profiles (used on detail page)
   profiles?: Profile
 }
@@ -34,6 +36,7 @@ export interface Listing {
 export interface FilterState {
   q: string
   city: string
+  neighborhood: string
   type: 'all' | ListingType
   minPrice: number
   maxPrice: number
@@ -54,3 +57,15 @@ export const CITIES = [
 ] as const
 
 export type City = (typeof CITIES)[number]
+
+
+export const LIFESTYLE_TAGS = [
+  'طالب (Student)',
+  'موظف (Professional)',
+  'هادئ (Quiet)',
+  'اجتماعي (Social)',
+  'لا أدخن (Non-smoker)',
+  'أدخن (Smoker)',
+  'مسموح بالحيوانات (Pet-friendly)',
+  'نظيف ومرتب (Clean & Tidy)'
+] as const

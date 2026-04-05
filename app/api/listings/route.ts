@@ -12,6 +12,7 @@ export async function GET(request: Request) {
   const minPrice = searchParams.get('minPrice')
   const maxPrice = searchParams.get('maxPrice')
   const q = searchParams.get('q')
+  const neighborhood = searchParams.get('neighborhood')
   
   const cookieStore = await cookies()
   const supabase = createServerClient(
@@ -22,12 +23,16 @@ export async function GET(request: Request) {
 
   let query = supabase
     .from('listings')
-    .select('id, type, title, description, city, neighborhood, price, gender_preference, photos, status, view_count, created_at, user_id')
+    .select('id, type, title, description, city, neighborhood, price, gender_preference, photos, status, view_count, created_at, user_id, bumped_at, tags')
     .eq('status', 'active')
+    .order('bumped_at', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
 
   if (city && city !== 'all') {
     query = query.eq('city', city)
+  }
+  if (neighborhood && neighborhood !== 'all') {
+    query = query.eq('neighborhood', neighborhood)
   }
   if (type && type !== 'all') {
     query = query.eq('type', type)

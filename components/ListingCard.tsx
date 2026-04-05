@@ -187,6 +187,12 @@ export default function ListingCard({ listing }: ListingCardProps) {
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-wider bg-[#f0f2f5] text-[#65676B] border border-[#ccd0d5] shadow-sm hover:scale-105 transition-transform">
                    {listing.gender_preference === 'any' ? 'متاح للجميع' : listing.gender_preference === 'male' ? 'ذكور' : 'إناث'}
                 </div>
+
+                {listing.tags && listing.tags.map(tag => (
+                  <div key={tag} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-[#f0f2f5] to-[#f8f9fa] text-[#1c1c1c] border border-[#edeff1] shadow-sm hover:scale-105 transition-transform">
+                    {tag}
+                  </div>
+                ))}
              </div>
 
              <div className="text-[0.92rem] md:text-[0.98rem] text-[#050505] line-clamp-2 leading-relaxed whitespace-pre-line font-medium opacity-80 mb-1">

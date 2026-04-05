@@ -132,7 +132,7 @@ export default function FilterBar({ onFilter, initialFilters }: FilterBarProps) 
         {/* Reset */}
         <button
           onClick={() => {
-            const reset: FilterState = { q: '', city: 'all', type: 'all', minPrice: 0, maxPrice: 0, genderPreference: 'all' }
+            const reset: FilterState = { q: '', city: 'all', neighborhood: 'all', type: 'all', minPrice: 0, maxPrice: 0, genderPreference: 'all' }
             setFilters(reset)
             onFilter(reset)
           }}

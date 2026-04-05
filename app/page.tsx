@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import FilterBar from '@/components/FilterBar'
 import ListingGrid, { ListingGridSkeleton } from '@/components/ListingGrid'
+import CityGrid from '@/components/CityGrid'
+import WelcomeBanner from '@/components/WelcomeBanner'
 import ResponsiveModal from '@/components/ResponsiveModal'
 import { FilterState, Listing } from '@/types'
 import Link from 'next/link'
@@ -10,6 +12,7 @@ import Link from 'next/link'
 const INITIAL_FILTERS: FilterState = {
   q: '',
   city: 'all',
+  neighborhood: 'all',
   type: 'all',
   minPrice: 0,
   maxPrice: 0,
@@ -49,6 +52,7 @@ export default function Home(props: {
         setLoading(true)
         const params = new URLSearchParams()
         if (filters.city !== 'all') params.set('city', filters.city)
+        if (filters.neighborhood && filters.neighborhood !== 'all') params.set('neighborhood', filters.neighborhood)
         if (filters.type !== 'all') params.set('type', filters.type)
         if (filters.genderPreference !== 'all') params.set('genderPreference', filters.genderPreference)
         if (filters.minPrice > 0) params.set('minPrice', filters.minPrice.toString())
@@ -76,6 +80,8 @@ export default function Home(props: {
         {/* Main Feed Column */}
         <div className="flex-grow w-full min-w-0 flex flex-col gap-4">
           
+          <WelcomeBanner />
+
           {/* Social Media Style 'Create Post' Trigger */}
           <div className="bg-white rounded-xl shadow-sm border border-[#edeff1] p-4 flex flex-col gap-3">
             <div className="flex items-center gap-3">
@@ -117,6 +123,14 @@ export default function Home(props: {
                 </div>
              )}
           </div>
+
+          {/* City Explorer Grid */}
+          <CityGrid 
+            activeCity={filters.city} 
+            onCitySelect={(city) => setFilters(prev => ({ ...prev, city, neighborhood: 'all' }))} 
+            activeNeighborhood={filters.neighborhood}
+            onNeighborhoodSelect={(neighborhood) => setFilters(prev => ({ ...prev, neighborhood }))}
+          />
 
           {/* Feed Header */}
           <div className="card-widget p-3 flex items-center justify-between">
