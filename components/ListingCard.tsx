@@ -125,7 +125,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
 
       <div 
         onClick={handleCardClick}
-        className={`bg-white md:rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] border-t border-b md:border border-[#edeff1] mb-6 md:mb-8 overflow-hidden flex flex-col cursor-pointer transition-all hover:bg-[#f6f7f8]/50 active:scale-[0.995] relative group ${isClosed ? 'opacity-80' : ''}`}
+        className={`bg-white md:rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.03)] border-t border-b md:border border-[#edeff1] mb-4 md:mb-8 overflow-hidden flex flex-col cursor-pointer transition-all hover:bg-[#f6f7f8]/50 active:scale-[0.995] relative group ${isClosed ? 'opacity-80' : ''}`}
       >
           {isClosed && (
             <div className="absolute inset-0 z-10 bg-white/40 flex items-center justify-center pointer-events-none">
@@ -136,24 +136,26 @@ export default function ListingCard({ listing }: ListingCardProps) {
           )}
 
           {/* Top Header */}
-          <div className="p-3.5 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-tr from-[#0079D3] to-[#FF4500] rounded-full flex items-center justify-center text-white font-bold shadow-sm p-[2px]">
-                 <div className="w-full h-full bg-white rounded-full flex items-center justify-center text-[#1c1c1c] text-[1.1rem] font-black">
+          <div className="p-3 md:p-5 flex items-center justify-between">
+            <div className="flex items-center gap-2.5 md:gap-3">
+              <div className="w-9 h-9 md:w-11 md:h-11 bg-gradient-to-tr from-[#0079D3] to-[#FF4500] rounded-full flex items-center justify-center text-white font-bold shadow-sm p-[1.5px]">
+                 <div className="w-full h-full bg-white rounded-full flex items-center justify-center text-[#1c1c1c] text-sm md:text-[1.1rem] font-black">
                    {listing.profiles?.name ? listing.profiles.name.charAt(0).toUpperCase() : 'U'}
                  </div>
               </div>
               <div className="flex flex-col text-right">
-                <span className="text-[0.95rem] font-black text-[#1c1c1c] flex items-center gap-1 leading-tight hover:underline">
-                  {listing.profiles?.name || 'مستخدم'}
+                <div className="flex items-center gap-1.5 leading-none">
+                  <span className="text-[0.9rem] md:text-[1rem] font-black text-[#1c1c1c] hover:underline truncate max-w-[120px] md:max-w-none">
+                    {listing.profiles?.name || 'مستخدم'}
+                  </span>
                   {isHighlyResponsive && (
-                    <span className="flex items-center gap-0.5 text-[#2b8a3e] bg-[#d3f9d8] px-1.5 py-0.5 rounded-[5px] text-[9px] font-black tracking-wide border border-[#b2f2bb] ml-1 shadow-sm">
+                    <span className="flex items-center gap-0.5 text-[#2b8a3e] bg-[#d3f9d8] px-1.5 py-0.5 rounded-lg text-[8px] md:text-[9px] font-black tracking-wide border border-[#b2f2bb] shadow-sm flex-shrink-0">
                       <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clipRule="evenodd" /></svg>
                       نشط اليوم
                     </span>
                   )}
-                </span>
-                <span className="text-[11px] font-bold text-[#65676B] flex items-center gap-1 opacity-80">
+                </div>
+                <span className="text-[10px] md:text-[11px] font-bold text-[#65676B] flex items-center gap-1 opacity-70 mt-1 md:mt-1.5">
                   {listing.city} {listing.neighborhood && `• ${listing.neighborhood}`} 
                   <span className="mx-1">•</span> 
                   {getRelativeTime(listing.created_at)}
@@ -162,66 +164,62 @@ export default function ListingCard({ listing }: ListingCardProps) {
             </div>
 
             <button onClick={handleReportClick} className="text-[#878A8C] hover:text-[#FF4500] hover:bg-red-50 p-2 rounded-full transition-all relative z-20 cursor-pointer active:scale-90" title="تبليغ">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8a1 1 0 100-2 1 1 0 000 2zM12 10a1 1 0 100 2 1 1 0 000-2zM12 14a1 1 0 100 2 1 1 0 000-2z" /></svg>
+              <svg className="w-5 h-5 opacity-50" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8a1 1 0 100-2 1 1 0 000 2zM12 10a1 1 0 100 2 1 1 0 000-2zM12 14a1 1 0 100 2 1 1 0 000-2z" /></svg>
             </button>
           </div>
 
-          {/* Details & Tags (Above Media) */}
-          <div className="px-4 pb-3">
-             <div className="flex justify-between items-start mb-2 gap-3">
-               <h3 className="text-[1.1rem] font-black text-[#050505] leading-snug tracking-tight">
+          {/* Details & Tags */}
+          <div className="px-3 md:px-5 pb-3">
+             <div className="flex justify-between items-start mb-2.5 gap-3">
+               <h3 className="text-[1.05rem] md:text-[1.15rem] font-black text-[#050505] leading-snug tracking-tight">
                  {listing.title}
                </h3>
-               <span className="text-[#0079D3] font-black text-[1.05rem] bg-[#e7f3ff] px-3 py-1 rounded-xl flex-shrink-0 shadow-sm border border-[#0079D3]/10 tracking-tight">
+               <span className="text-[#0079D3] font-black text-[1rem] md:text-[1.1rem] bg-[#e7f3ff] px-3 py-1 rounded-xl flex-shrink-0 shadow-sm border border-[#0079D3]/10 tracking-tight">
                  {formatPrice(listing.price)}
                </span>
              </div>
              
-             {/* Clear Visual Tags */}
-             <div className="flex flex-wrap gap-2 mb-3">
-                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-sm transition-transform hover:scale-105 ${isRoom ? 'bg-[#e7f3ff] text-[#0079D3] border border-[#0079D3]/20' : 'bg-[#fce8e6] text-[#c9302c] border border-[#c9302c]/20'}`}>
-                  {isRoom ? (
-                     <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
-                  ) : (
-                     <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" /></svg>
-                  )}
+             <div className="flex flex-wrap gap-2 mb-3.5">
+                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-wider shadow-sm transition-transform hover:scale-105 ${isRoom ? 'bg-[#e7f3ff] text-[#0079D3] border border-[#0079D3]/20' : 'bg-[#fff0e5] text-[#ff4500] border border-[#ff4500]/20'}`}>
                   {listingTypeLabel(listing.type)}
                 </div>
                 
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-[#f0f2f5] text-[#65676B] border border-[#ccd0d5] shadow-sm hover:scale-105 transition-transform">
-                   <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" /></svg>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-wider bg-[#f0f2f5] text-[#65676B] border border-[#ccd0d5] shadow-sm hover:scale-105 transition-transform">
                    {listing.gender_preference === 'any' ? 'متاح للجميع' : listing.gender_preference === 'male' ? 'ذكور' : 'إناث'}
                 </div>
              </div>
 
-             <div className="text-[0.95rem] text-[#050505] line-clamp-2 leading-relaxed whitespace-pre-line font-medium opacity-90">
+             <div className="text-[0.92rem] md:text-[0.98rem] text-[#050505] line-clamp-2 leading-relaxed whitespace-pre-line font-medium opacity-80 mb-1">
                  {listing.description}
              </div>
           </div>
 
-          {/* Conditional Media (No Placeholder) */}
+          {/* Optimized Media */}
           {firstPhoto && (
-            <div className="block relative w-full aspect-[16/10] bg-[#F0F2F5] transition-opacity hover:opacity-95 overflow-hidden border-t border-b border-[#f0f2f5]/50 mt-1">
+            <div className="block relative w-full aspect-[16/9] bg-[#F0F2F5] transition-opacity hover:opacity-95 overflow-hidden md:border-t md:border-b border-[#f0f2f5]/40 mt-1 shadow-inner">
                 <Image
                   src={firstPhoto}
                   alt={listing.title}
                   fill
-                  className="object-cover transition-transform duration-700 hover:scale-105"
+                  className="object-cover transition-transform duration-700 hover:scale-[1.03]"
                   sizes="(max-width: 768px) 100vw, 800px"
                 />
             </div>
           )}
 
           {/* Action Row */}
-          <div className="px-4 py-3 flex items-center justify-between bg-white relative z-20 border-t border-[#f0f2f5]">
-             <div className="flex items-center gap-1 sm:gap-2 flex-grow">
-               <button onClick={handleSave} className={`flex-1 sm:flex-none flex items-center justify-center gap-2 hover:bg-[#f0f2f5] px-4 py-2.5 rounded-xl transition-all font-black text-sm cursor-pointer active:scale-90 ${isSaved ? 'text-[#0079D3] bg-[#e7f3ff]' : 'text-[#65676B] hover:text-[#1c1c1c]'}`}>
+          <div className="px-3 md:px-5 py-3 md:py-4 flex items-center justify-between bg-white relative z-20 border-t border-[#f0f2f5]">
+             <div className="flex items-center gap-1 sm:gap-2 flex-grow min-w-0">
+               <button 
+                onClick={handleSave} 
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 hover:bg-[#f0f2f5] px-4 md:px-5 py-2.5 rounded-2xl transition-all font-black text-xs md:text-sm cursor-pointer active:scale-95 ${isSaved ? 'text-[#0079D3] bg-[#e7f3ff] border-[#0079D3]/20' : 'text-[#65676B] hover:text-[#1c1c1c] border border-transparent'}`}
+               >
                  <svg className="w-5 h-5 flex-shrink-0" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
-                 <span className="hidden sm:inline">{isSaved ? 'محفوظ' : 'حفظ'}</span>
+                 <span className="hidden xs:inline">{isSaved ? 'محفوظ' : 'حفظ'}</span>
                </button>
-               <button onClick={handleShare} className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-[#65676B] hover:text-[#1c1c1c] hover:bg-[#f0f2f5] px-4 py-2.5 rounded-xl transition-all font-black text-sm cursor-pointer active:scale-90">
+               <button onClick={handleShare} className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-[#65676B] hover:text-[#1c1c1c] hover:bg-[#f0f2f5] px-4 md:px-5 py-2.5 rounded-2xl transition-all font-black text-xs md:text-sm cursor-pointer active:scale-95">
                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
-                 <span className="hidden sm:inline">مشاركة</span>
+                 <span className="hidden xs:inline">مشاركة</span>
                </button>
              </div>
              
@@ -230,10 +228,9 @@ export default function ListingCard({ listing }: ListingCardProps) {
                  e.stopPropagation();
                  router.push(`/listing/${listing.id}`);
                }}
-               className="flex items-center gap-2 bg-[#0079D3] hover:bg-[#0062ab] text-white px-6 py-2.5 rounded-xl transition-all font-black text-sm shadow-[0_4px_12px_rgba(0,121,211,0.2)] active:scale-90 cursor-pointer"
+               className="flex items-center gap-2 bg-[#0079D3] hover:bg-[#0062ab] text-white px-6 md:px-8 py-3 rounded-2xl transition-all font-black text-xs md:text-sm shadow-[0_8px_25px_rgba(0,121,211,0.25)] active:scale-95 cursor-pointer flex-shrink-0"
              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-                تواصل
+                تواصل الآن
              </button>
           </div>
       </div>

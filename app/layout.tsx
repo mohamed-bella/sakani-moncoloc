@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
-import { Cairo } from 'next/font/google'
+import { Tajawal } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 
-const cairo = Cairo({
+const tajawal = Tajawal({
   subsets: ['arabic', 'latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-arabic',
+  weight: ['200', '300', '400', '500', '700', '800', '900'],
+  variable: '--font-tajawal',
   display: 'swap',
 })
 
@@ -30,8 +30,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ar" dir="rtl" className={cairo.variable}>
-      <body className="antialiased min-h-screen flex flex-col" style={{ fontFamily: "'Cairo', sans-serif" }}>
+    <html lang="ar" dir="rtl" className={tajawal.variable}>
+      <body className="antialiased min-h-screen flex flex-col" style={{ fontFamily: "var(--font-tajawal), sans-serif" }}>
         
         {/* Sticky Header - Navbar handles its own positioning */}
         <Navbar />

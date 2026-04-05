@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Cairo', ui-sans-serif, system-ui, sans-serif;
-  --font-arabic: 'Cairo', sans-serif;
+  --font-sans: 'Tajawal', ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: 'Tajawal', sans-serif;
 
   --color-primary: #0079D3;
   --color-primary-dark: #005a9e;
@@ -11,9 +11,9 @@
   --color-accent-dark: #cc3700;
   --color-bg: #DAE0E6;
   --color-card: #FFFFFF;
-  --color-text: #1c1c1c;
-  --color-muted: #787C7E;
-  --color-border: #ccc;
+  --color-text: #1a1a1b;
+  --color-muted: #57646e;
+  --color-border: #edeff1;
 }
 
 html {
@@ -21,12 +21,13 @@ html {
 }
 
 body {
-  font-family: 'Cairo', ui-sans-serif, system-ui, sans-serif;
+  font-family: 'Tajawal', var(--font-tajawal), ui-sans-serif, system-ui, sans-serif;
   background-color: #DAE0E6;
-  color: #1c1c1c;
-  line-height: 1.5;
+  color: #1a1a1b;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 /* ======================== SCROLLBAR ======================== */
