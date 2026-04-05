@@ -196,7 +196,7 @@ export default function ListingDetailClient({ initialListing, listingId }: Listi
                {formatPrice(listing.price)}
             </div>
             {listing.profiles?.whatsapp ? (
-              <WhatsAppButton listingId={listingId} whatsappNumber={listing.profiles.whatsapp} listingTitle={listing.title} />
+              <WhatsAppButton listingId={listingId} />
             ) : (
               <div className="bg-[#f6f7f8] text-[#787C7E] p-3 rounded text-center text-sm font-bold border border-[#edeff1]">رقم التواصل غير متوفر</div>
             )}
