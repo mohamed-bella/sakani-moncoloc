@@ -25,8 +25,8 @@ export async function GET(
   // Fetch profile separately bypassing RLS since profiles only allow self-view by default
   const supabaseAdmin = await createServiceClient()
   
-  // Security Feature: Only expose WhatsApp number to authenticated users to prevent scraping
-  const profileSelectQuery = user ? 'name, whatsapp, last_seen_at' : 'name, last_seen_at'
+  // Security Feature: Only expose WhatsApp number via an explicit REVEAL action to prevent scraping
+  const profileSelectQuery = 'name, last_seen_at, whatsapp' // We select it but we will filter it before returning
   
   const { data: profileData } = await supabaseAdmin
     .from('profiles')
@@ -34,8 +34,13 @@ export async function GET(
     .eq('id', listingData.user_id)
     .single()
 
+  const hasWhatsApp = !!profileData?.whatsapp
+  if (profileData) {
+    delete profileData.whatsapp // MASK THE NUMBER
+  }
+
   return NextResponse.json({ 
-    listing: { ...listingData, profiles: profileData || null } 
+    listing: { ...listingData, profiles: profileData ? { ...profileData, has_whatsapp: hasWhatsApp } : null } 
   })
 }
 

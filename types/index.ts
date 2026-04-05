@@ -5,7 +5,8 @@ export type ListingStatus = 'active' | 'closed'
 export interface Profile {
   id: string
   name: string
-  whatsapp: string
+  whatsapp?: string
+  has_whatsapp?: boolean
   created_at: string
   last_seen_at?: string
 }

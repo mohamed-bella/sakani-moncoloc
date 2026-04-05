@@ -82,7 +82,7 @@ export default function Navbar() {
 
   const handlePostClick = () => {
     if (!user) {
-      router.push('/auth/login?redirectTo=/post')
+      router.push('/auth/register?redirectTo=/post')
       return
     }
     setShowPostModal(true)
@@ -109,7 +109,9 @@ export default function Navbar() {
             {user && (
               <>
                 <div className="w-px h-6 bg-[#ccc] mx-2 self-center"></div>
-                <Link href="/dashboard" className={`px-4 py-1.5 rounded-full ${isActive('/dashboard') ? 'bg-[#f0f0f0] text-[#1c1c1c]' : 'hover:bg-[#f6f7f8]'}`}>لوحة التحكم</Link>
+                <Link href="/saved" className={`px-4 py-1.5 rounded-full ${isActive('/saved') ? 'bg-[#f0f0f0] text-[#1c1c1c]' : 'hover:bg-[#f6f7f8]'}`}>المفضلة</Link>
+                <div className="w-px h-6 bg-[#ccc] mx-2 self-center"></div>
+                <Link href="/dashboard" className={`px-4 py-1.5 rounded-full ${isActive('/dashboard') ? 'bg-[#f0f0f0] text-[#1c1c1c]' : 'hover:bg-[#f6f7f8]'}`}>إعلاناتي</Link>
               </>
             )}
             {isAdmin && (
@@ -169,12 +171,13 @@ export default function Navbar() {
               </div>
             ) : (
               <div className="flex items-center gap-3">
-                <Link href="/auth/login" className="btn-outline px-4 py-1.5 text-sm h-[32px]">دخول</Link>
+                <Link href="/auth/login" className="px-3 py-1.5 text-sm font-bold text-[#787C7E] hover:text-[#0079D3] transition-colors">دخول</Link>
+                <Link href="/auth/register" className="btn-accent px-4 py-1.5 text-sm h-[32px] flex items-center justify-center">سجل الآن</Link>
+                <div className="w-px h-6 bg-[#ccc] mx-1"></div>
                 <button 
                   onClick={handlePostClick}
-                  className="btn-accent px-4 py-1.5 text-sm h-[32px]"
+                  className="bg-[#f0f2f5] hover:bg-[#e4e6eb] text-[#1c1c1c] px-4 py-1.5 text-sm h-[32px] rounded-full font-bold transition-all"
                 >
-                  <svg className="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
                   أضف إعلانك
                 </button>
               </div>
@@ -187,6 +190,11 @@ export default function Navbar() {
               <svg className="w-6 h-6 mb-1" fill={isActive('/') ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isActive('/') ? "0" : "2"} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
               <span className="text-[10px] font-bold">الرئيسية</span>
             </Link>
+
+            <Link href="/saved" className={`flex flex-col items-center justify-center w-full h-full pb-1 transition-colors ${isActive('/saved') ? 'text-[#FF4500]' : 'text-[#878A8C] hover:text-[#1c1c1c]'}`}>
+               <svg className="w-6 h-6 mb-1" fill={isActive('/saved') ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isActive('/saved') ? "0" : "2"} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+               <span className="text-[10px] font-bold">المفضلة</span>
+            </Link>
             
             <button onClick={handlePostClick} className="flex flex-col items-center justify-center w-full h-full -mt-6">
               <div className="bg-[#FF4500] hover:bg-[#ff5414] active:scale-95 transition-all text-white rounded-full p-3.5 shadow-[0_4px_12px_rgba(255,69,0,0.3)]">
@@ -194,9 +202,9 @@ export default function Navbar() {
               </div>
             </button>
 
-            <Link href={user ? "/dashboard" : "/auth/login"} className={`flex flex-col items-center justify-center w-full h-full pb-1 transition-colors ${isActive('/dashboard') || isActive('/auth/login') ? 'text-[#1c1c1c]' : 'text-[#878A8C] hover:text-[#1c1c1c]'}`}>
-               <svg className="w-6 h-6 mb-1" fill={isActive('/dashboard') || isActive('/auth/login') ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isActive('/dashboard') || isActive('/auth/login') ? "0" : "2"} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-               <span className="text-[10px] font-bold">{user ? 'حسابي' : 'دخول'}</span>
+            <Link href={user ? "/dashboard" : "/auth/register"} className={`flex flex-col items-center justify-center w-full h-full pb-1 transition-colors ${isActive('/dashboard') || isActive('/auth/register') ? 'text-[#1c1c1c]' : 'text-[#878A8C] hover:text-[#1c1c1c]'}`}>
+               <svg className="w-6 h-6 mb-1" fill={isActive('/dashboard') || isActive('/auth/register') ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isActive('/dashboard') || isActive('/auth/register') ? "0" : "2"} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+               <span className="text-[10px] font-bold">{user ? 'حسابي' : 'سجل الآن'}</span>
             </Link>
           </div>
 

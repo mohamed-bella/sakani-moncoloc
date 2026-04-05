@@ -89,6 +89,7 @@ export default function PostListingForm({ onSuccess }: PostListingFormProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...data,
+          title: data.title || data.description.substring(0, 50).trim() + (data.description.length > 50 ? '...' : ''),
           photos: uploadedUrls,
         }),
       })
@@ -189,11 +190,7 @@ export default function PostListingForm({ onSuccess }: PostListingFormProps) {
         <div className="space-y-6">
           <h2 className="text-xl font-black text-[#1c1c1c] text-center mb-6">الوصف والصور</h2>
 
-          <div>
-            <label className="block text-sm font-bold text-[#1c1c1c] mb-2 text-right">عنوان الإعلان <span className="text-[#FF4500]">*</span></label>
-            <input type="text" {...register('title')} className="w-full px-4 py-3 bg-[#f6f7f8] border-2 border-[#edeff1] rounded-xl text-sm font-medium focus:outline-none focus:border-[#0079D3] focus:bg-white transition-colors text-right" dir="rtl" placeholder="مثال: غرفة مشمسة للطلاب في حي أكدال" disabled={isSubmitting} />
-            {errors.title && <p className="text-[#FF4500] text-xs mt-1 text-right font-bold">{errors.title.message}</p>}
-          </div>
+
 
           <div>
             <label className="block text-sm font-bold text-[#1c1c1c] mb-2 text-right">وصف تفصيلي <span className="text-[#FF4500]">*</span></label>

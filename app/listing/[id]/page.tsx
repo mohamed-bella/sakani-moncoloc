@@ -317,11 +317,9 @@ export default function ListingDetail() {
                {formatPrice(listing.price)}
             </div>
             
-            {listing.profiles?.whatsapp ? (
+            {listing.profiles?.has_whatsapp ? (
               <WhatsAppButton
                 listingId={listing.id}
-                whatsappNumber={listing.profiles.whatsapp}
-                listingTitle={listing.title}
               />
             ) : (
               <Link href={`/auth/login?redirectTo=/listing/${listing.id}`} className="block w-full bg-[#f6f7f8] hover:bg-[#E9ECEF] text-[#1c1c1c] p-3 rounded text-center text-sm font-bold border border-[#edeff1] transition-colors">

@@ -29,8 +29,8 @@ export const ListingSchema = z.object({
   type: z.enum(['room_available', 'looking_for_roommate']),
   title: z
     .string()
-    .min(5, 'العنوان قصير جداً')
-    .max(100, 'العنوان طويل جداً (100 حرف كحد أقصى)'),
+    .max(100, 'العنوان طويل جداً (100 حرف كحد أقصى)')
+    .optional(),
   description: z
     .string()
     .min(20, 'الوصف قصير جداً')
