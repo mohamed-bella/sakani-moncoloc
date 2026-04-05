@@ -84,14 +84,11 @@ export default function Navbar() {
 
   const handlePostSuccess = () => {
     setShowPostModal(false)
-    router.refresh()
+    // Trigger homepage feed to re-fetch without full reload
+    window.dispatchEvent(new Event('listings:refresh'))
   }
 
   const handlePostClick = () => {
-    if (!user) {
-      router.push('/auth/register?redirectTo=/post')
-      return
-    }
     setShowPostModal(true)
   }
 
@@ -100,23 +97,33 @@ export default function Navbar() {
   return (
     <>
       <div className="bg-white border-b border-[#ccc] fixed top-0 w-full z-50">
-        <div className="max-w-[1280px] mx-auto px-4 w-full h-[48px] flex items-center justify-between">
+        <div className="max-w-[1280px] mx-auto px-4 w-full h-[48px] flex items-center justify-between relative">
           
-          {/* Brand & Left Actions */}
-          <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2 no-underline text-[#1c1c1c] hover:opacity-80">
+          {/* ─── DESKTOP: Brand left ─── */}
+          <div className="hidden md:flex items-center gap-6">
+            <Link href="/" className="flex items-center gap-2 no-underline text-[#1C1C1E] hover:opacity-80">
               <img src="/logo_moncoloc.ma.png" alt="moncoloc.ma" className="w-10 h-10 object-contain" />
-              <span className="text-[1.2rem] font-bold tracking-tight">moncoloc.ma</span>
+              <span className="text-[1.1rem] font-bold tracking-tight">moncoloc.ma</span>
+            </Link>
+          </div>
+
+          {/* ─── MOBILE: Centered logo (absolute center trick) ─── */}
+          <div className="md:hidden absolute left-0 right-0 flex justify-center pointer-events-none">
+            <Link href="/" className="flex items-center gap-2 no-underline text-[#1C1C1E] pointer-events-auto">
+              <img src="/logo_moncoloc.ma.png" alt="moncoloc.ma" className="w-8 h-8 object-contain" />
+              <span className="text-[1rem] font-bold tracking-tight">moncoloc.ma</span>
             </Link>
           </div>
 
           {/* Center Nav Links */}
           <div className="hidden md:flex flex-grow max-w-[500px] justify-center text-sm font-semibold text-[#787C7E] items-center">
             <Link href="/" className={`px-4 py-1.5 rounded-full ${isActive('/') ? 'bg-[#f0f0f0] text-[#1c1c1c]' : 'hover:bg-[#f6f7f8]'}`}>الرئيسية</Link>
+            
+            <div className="w-px h-6 bg-[#ccc] mx-2 self-center"></div>
+            <Link href="/saved" className={`px-4 py-1.5 rounded-full ${isActive('/saved') ? 'bg-[#f0f0f0] text-[#1c1c1c]' : 'hover:bg-[#f6f7f8]'}`}>المفضلة</Link>
+
             {user && (
               <>
-                <div className="w-px h-6 bg-[#ccc] mx-2 self-center"></div>
-                <Link href="/saved" className={`px-4 py-1.5 rounded-full ${isActive('/saved') ? 'bg-[#f0f0f0] text-[#1c1c1c]' : 'hover:bg-[#f6f7f8]'}`}>المفضلة</Link>
                 <div className="w-px h-6 bg-[#ccc] mx-2 self-center"></div>
                 <Link href="/dashboard" className={`px-4 py-1.5 rounded-full ${isActive('/dashboard') ? 'bg-[#f0f0f0] text-[#1c1c1c]' : 'hover:bg-[#f6f7f8]'}`}>إعلاناتي</Link>
               </>
@@ -177,7 +184,7 @@ export default function Navbar() {
                 {!isBanned && (
                   <button 
                     onClick={handlePostClick}
-                    className="btn-accent px-4 py-1.5 text-sm h-[32px]"
+                    className="btn-primary px-4 py-1.5 text-sm h-[32px]"
                   >
                     <svg className="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
                     أضف إعلانك
@@ -186,69 +193,91 @@ export default function Navbar() {
               </div>
             ) : (
               <div className="flex items-center gap-3">
-                <Link href="/auth/login" className="px-3 py-1.5 text-sm font-bold text-[#787C7E] hover:text-[#0079D3] transition-colors">دخول</Link>
-                <Link href="/auth/register" className="btn-accent px-4 py-1.5 text-sm h-[32px] flex items-center justify-center">سجل الآن</Link>
-                <div className="w-px h-6 bg-[#ccc] mx-1"></div>
                 <button 
                   onClick={handlePostClick}
-                  className="bg-[#f0f2f5] hover:bg-[#e4e6eb] text-[#1c1c1c] px-4 py-1.5 text-sm h-[32px] rounded-full font-bold transition-all"
+                  className="btn-primary px-4 py-1.5 text-sm h-[32px] flex items-center gap-1.5"
                 >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
                   أضف إعلانك
                 </button>
               </div>
             )}
           </div>
 
-          {/* Mobile Bottom Navigation (Instagram Style) */}
-          <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#edeff1] h-[64px] z-[100] flex items-center justify-between px-2 pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.04)]">
-            
-            {/* Home */}
-            <Link href="/" className={`flex flex-1 flex-col items-center justify-center h-full transition-all active:scale-90 ${isActive('/') ? 'text-[#0079D3]' : 'text-[#878A8C]'}`}>
-              <svg className="w-6 h-6 mb-1" fill={isActive('/') ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isActive('/') ? "0" : "2.5"} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-              <span className="text-[9px] font-black uppercase tracking-tighter">الرئيسية</span>
-            </Link>
+          {/* ═══════════════════════════════════════════════
+               MOBILE BOTTOM NAV — Apple Tab Bar style
+               Layout: [Home] [Saved] [+FAB] [My Ads] [?]
+               FAB sits above the bar, centered perfectly
+          ═══════════════════════════════════════════════ */}
+          <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[100] h-[72px] pb-safe"
+               style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: '0.5px solid rgba(60,60,67,0.16)' }}>
 
-            {/* Saved */}
-            <Link href="/saved" className={`flex flex-1 flex-col items-center justify-center h-full transition-all active:scale-90 ${isActive('/saved') ? 'text-[#FF4500]' : 'text-[#878A8C]'}`}>
-               <svg className="w-6 h-6 mb-1" fill={isActive('/saved') ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isActive('/saved') ? "0" : "2.5"} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-               <span className="text-[9px] font-black uppercase tracking-tighter">المفضلة</span>
-            </Link>
-            
-            {/* ADD (Floating Center) */}
-            <div className="flex-1 flex flex-col items-center justify-center h-full relative">
-              <button 
-                onClick={handlePostClick} 
-                className="absolute -top-7 bg-[#FF4500] hover:bg-[#ff5414] active:scale-90 transition-all text-white rounded-full p-4 shadow-[0_8px_25px_rgba(255,69,0,0.4)] border-4 border-white"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4" /></svg>
-              </button>
-              <span className="text-[9px] font-black text-[#878A8C] mt-8 uppercase tracking-tighter">أضف إعلان</span>
+
+            <div className="h-full flex items-center">
+
+              {/* ── LEFT HALF: Home + Saved ── */}
+              <div className="flex flex-1 items-stretch h-full">
+
+                {/* Home */}
+                <Link href="/" className={`flex flex-1 flex-col items-center justify-center gap-1 transition-all active:scale-90 ${
+                  isActive('/') ? 'text-[#0071E3]' : 'text-[#8E8E93]'
+                }`}>
+                  <svg className="w-[22px] h-[22px]" fill={isActive('/') ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isActive('/') ? 0 : 2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                  <span className="text-[10px] font-medium">الرئيسية</span>
+                </Link>
+
+                {/* Saved */}
+                <Link href="/saved" className={`flex flex-1 flex-col items-center justify-center gap-1 transition-all active:scale-90 ${
+                  isActive('/saved') ? 'text-[#FF3B30]' : 'text-[#8E8E93]'
+                }`}>
+                  <svg className="w-[22px] h-[22px]" fill={isActive('/saved') ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isActive('/saved') ? 0 : 2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                  <span className="text-[10px] font-medium">المفضلة</span>
+                </Link>
+              </div>
+
+              {/* ── CENTER: FAB slot (takes up space, button floats above) ── */}
+              <div className="w-[72px] flex-shrink-0 relative flex flex-col items-center justify-end pb-1">
+                <button
+                  onClick={handlePostClick}
+                  aria-label="أضف إعلانك"
+                  className="absolute -top-8 w-[54px] h-[54px] bg-[#0071E3] rounded-full flex items-center justify-center text-white shadow-[0_6px_20px_rgba(0,113,227,0.40)] active:scale-90 transition-all hover:bg-[#0058b0] border-4 border-[rgba(242,242,247,0.95)]"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+                  </svg>
+                </button>
+                <span className="text-[10px] font-medium text-[#8E8E93] mt-1">نشر</span>
+              </div>
+
+              {/* ── RIGHT HALF: My Ads OR Admin (single item, full width) ── */}
+              <div className="flex flex-1 items-stretch h-full">
+                {isAdmin ? (
+                  <Link href="/admin" className={`flex flex-1 flex-col items-center justify-center gap-1 transition-all active:scale-90 ${
+                    isActive('/admin') ? 'text-[#FF3B30]' : 'text-[#8E8E93]'
+                  }`}>
+                    <svg className="w-[22px] h-[22px]" fill={isActive('/admin') ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isActive('/admin') ? 0 : 2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    <span className="text-[10px] font-medium">الإدارة</span>
+                  </Link>
+                ) : (
+                  <Link href="/dashboard" className={`flex flex-1 flex-col items-center justify-center gap-1 transition-all active:scale-90 ${
+                    isActive('/dashboard') ? 'text-[#0071E3]' : 'text-[#8E8E93]'
+                  }`}>
+                    <svg className="w-[22px] h-[22px]" fill={isActive('/dashboard') ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isActive('/dashboard') ? 0 : 2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    <span className="text-[10px] font-medium">إعلاناتي</span>
+                  </Link>
+                )}
+              </div>
+
             </div>
-
-            {/* Dashboard / Admin Panel */}
-            {isAdmin ? (
-              <Link href="/admin" className={`flex flex-1 flex-col items-center justify-center h-full transition-all active:scale-90 ${isActive('/admin') ? 'text-[#FF4500]' : 'text-[#878A8C]'}`}>
-                 <svg className="w-6 h-6 mb-1" fill={isActive('/admin') ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isActive('/admin') ? "0" : "2.5"} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                 </svg>
-                 <span className="text-[9px] font-black uppercase tracking-tighter">الإدارة</span>
-              </Link>
-            ) : (
-              <Link href="/dashboard" className={`flex flex-1 flex-col items-center justify-center h-full transition-all active:scale-90 ${isActive('/dashboard') ? 'text-[#0079D3]' : 'text-[#878A8C]'}`}>
-                 <svg className="w-6 h-6 mb-1" fill={isActive('/dashboard') ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isActive('/dashboard') ? "0" : "2.5"} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-                 <span className="text-[9px] font-black uppercase tracking-tighter">إعلاناتي</span>
-              </Link>
-            )}
-
-            {/* Account / Signup */}
-            <Link 
-              href={user ? (isAdmin ? "/admin" : "/profile") : "/auth/register"} 
-              className={`flex flex-1 flex-col items-center justify-center h-full transition-all active:scale-90 ${isActive('/profile') || isActive('/auth/register') || isActive('/admin') ? 'text-[#1c1c1c]' : 'text-[#878A8C]'}`}
-            >
-               <svg className="w-6 h-6 mb-1" fill={isActive('/profile') || isActive('/auth/register') || isActive('/admin') ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isActive('/profile') || isActive('/auth/register') || isActive('/admin') ? "0" : "2.5"} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-               <span className="text-[9px] font-black uppercase tracking-tighter">{user ? (isAdmin ? 'المدير' : 'حسابي') : 'سجل الآن'}</span>
-            </Link>
-          </div>
+          </nav>
 
           {/* Post Listing Modal (Sheet on mobile) */}
           {showPostModal && (

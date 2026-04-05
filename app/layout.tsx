@@ -75,7 +75,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <Navbar />
 
         {/* Main Content Area */}
-        <main className="flex-grow pb-[80px] md:pb-0">
+        <main className="flex-grow pb-[88px] md:pb-0">
           {children}
         </main>
 

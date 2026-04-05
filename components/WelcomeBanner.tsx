@@ -7,7 +7,7 @@ export default function WelcomeBanner() {
 
   useEffect(() => {
     // Check if user previously dismissed the banner
-    const isDismissed = localStorage.getItem('sakani_welcome_dismissed')
+    const isDismissed = localStorage.getItem('moncoloc_welcome_dismissed')
     if (!isDismissed) {
       setIsVisible(true)
     }
@@ -15,7 +15,7 @@ export default function WelcomeBanner() {
 
   const handleClose = () => {
     setIsVisible(false)
-    localStorage.setItem('sakani_welcome_dismissed', 'true')
+    localStorage.setItem('moncoloc_welcome_dismissed', 'true')
   }
 
   if (!isVisible) return null
@@ -42,7 +42,7 @@ export default function WelcomeBanner() {
           </div>
           <div>
             <h3 className="font-black text-lg sm:text-xl leading-tight mb-1 text-white">
-              مرحباً بك في سكني!
+              مرحباً بك في moncoloc.ma!
             </h3>
             <p className="text-xs sm:text-sm font-medium text-white/80 leading-snug">
               البحث عن شريك سكنك المستقبلي أصبح أسهل، من الطلاب وللطلاب!

@@ -9,20 +9,22 @@ export async function POST(
   const { id } = await params
   const supabase = await createClient()
 
-  // 1. Authenticated check
+  // 1. Authenticated check (Removed for Guest Access)
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'يجب تسجيل الدخول لإظهار رقم التواصل' }, { status: 401 })
 
   // 2. Insert into reveals table which handles rate limiting via trigger
-  const { error: revealError } = await supabase
-    .from('contact_reveals')
-    .insert({ user_id: user.id, listing_id: id })
+  // Only insert if user exists, guests bypass rate limits temporarily
+  if (user) {
+    const { error: revealError } = await supabase
+      .from('contact_reveals')
+      .insert({ user_id: user.id, listing_id: id })
 
-  if (revealError) {
-    if (revealError.message.includes('Rate limit exceeded')) {
-      return NextResponse.json({ error: revealError.message }, { status: 429 })
+    if (revealError) {
+      if (revealError.message.includes('Rate limit exceeded')) {
+        return NextResponse.json({ error: revealError.message }, { status: 429 })
+      }
+      return NextResponse.json({ error: 'فشل في إظهار رقم التواصل' }, { status: 500 })
     }
-    return NextResponse.json({ error: 'فشل في إظهار رقم التواصل' }, { status: 500 })
   }
 
   // 3. Get the listing owner's specific number for this ad

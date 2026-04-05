@@ -41,13 +41,16 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const path = request.nextUrl.pathname
+  console.log(`[PROXY DEBUG] Path: ${path}, User: ${user ? 'Logged' : 'Guest'}`)
 
   // Public pages that anyone can see
   const isPublicPage = 
+    path.startsWith('/post') ||
     path === '/' || 
     path.startsWith('/listing') || 
     path.startsWith('/about') || 
     path.startsWith('/privacy') ||
+    path.startsWith('/saved') ||
     path.startsWith('/api')
 
   // Auth pages (where logged-in users shouldn't go back to)

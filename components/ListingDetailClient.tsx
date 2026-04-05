@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import WhatsAppButton from '@/components/WhatsAppButton'
@@ -16,15 +16,20 @@ interface ListingDetailClientProps {
 
 export default function ListingDetailClient({ initialListing, listingId }: ListingDetailClientProps) {
   const router = useRouter()
+  const historyLengthOnMount = useRef<number>(0)
   const [listing, setListing] = useState<Listing>(initialListing)
   const [relatedListings, setRelatedListings] = useState<Listing[]>([])
   const [activePhoto, setActivePhoto] = useState(0)
   const [isSaved, setIsSaved] = useState(false)
+  const [saveLoading, setSaveLoading] = useState(false)
   const [shareFeedback, setShareFeedback] = useState('')
   const [reportModalOpen, setReportModalOpen] = useState(false)
   const [reported, setReported] = useState(false)
 
   useEffect(() => {
+    // Record history length so we know if we can go back
+    historyLengthOnMount.current = window.history.length
+
     // Fetch related listings
     fetch(`/api/listings?city=${listing.city}&type=${listing.type}`)
       .then(res => res.json())
@@ -37,28 +42,36 @@ export default function ListingDetailClient({ initialListing, listingId }: Listi
     // Increment view count
     fetch(`/api/listings/${listingId}/view`, { method: 'POST' }).catch(() => {})
 
-    // Check local storage for saved status
-    if (typeof window !== 'undefined') {
-       const saved = JSON.parse(localStorage.getItem('saved_listings') || '[]')
-       if (saved.includes(listingId)) {
-          setIsSaved(true)
-       }
-    }
+    // Check save status via API (same source as ListingCard)
+    fetch(`/api/listings/save?listingId=${listingId}`)
+      .then(res => res.json())
+      .then(data => setIsSaved(data.isSaved))
+      .catch(() => {})
   }, [listingId, listing.city, listing.type])
 
-  const handleSave = () => {
-    if (typeof window === 'undefined') return
-    const saved = JSON.parse(localStorage.getItem('saved_listings') || '[]')
-    
-    if (isSaved) {
-      const updated = saved.filter((savedId: string) => savedId !== listingId)
-      localStorage.setItem('saved_listings', JSON.stringify(updated))
-      setIsSaved(false)
+  const handleGoBack = () => {
+    // If user arrived via a shared link (no in-app history), go home instead of leaving the site
+    if (window.history.length <= 2 || historyLengthOnMount.current <= 1) {
+      router.push('/')
     } else {
-      saved.push(listingId)
-      localStorage.setItem('saved_listings', JSON.stringify(saved))
-      setIsSaved(true)
+      router.back()
     }
+  }
+
+  const handleSave = async () => {
+    setSaveLoading(true)
+    try {
+      const res = await fetch('/api/listings/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listingId }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setIsSaved(data.saved)
+      }
+    } catch {}
+    finally { setSaveLoading(false) }
   }
 
   const handleShare = async () => {
@@ -113,7 +126,7 @@ export default function ListingDetailClient({ initialListing, listingId }: Listi
       
       <div className="mb-4">
         <button 
-          onClick={() => router.back()}
+          onClick={handleGoBack}
           className="flex items-center gap-2 text-[#787C7E] hover:text-[#1c1c1c] text-sm font-bold transition-colors cursor-pointer"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -176,7 +189,10 @@ export default function ListingDetailClient({ initialListing, listingId }: Listi
             <div className="text-[#1c1c1c] whitespace-pre-wrap leading-relaxed text-sm">{listing.description}</div>
             <div className="flex items-center gap-4 mt-8 pt-4 border-t border-[#edeff1] text-[#878A8C] text-xs font-bold">
                <button onClick={handleShare} className="flex items-center gap-1.5 hover:bg-[#E9ECEF] px-2 py-1.5 rounded transition-colors cursor-pointer"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg> مشاركة</button>
-               <button onClick={handleSave} className={`flex items-center gap-1.5 px-2 py-1.5 rounded transition-colors cursor-pointer ${isSaved ? 'text-[#FF4500] bg-[#FFF0E5]' : 'hover:bg-[#E9ECEF]'}`}><svg className="w-5 h-5" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg> {isSaved ? 'تم الحفظ' : 'حفظ'}</button>
+               <button onClick={handleSave} disabled={saveLoading} className={`flex items-center gap-1.5 px-2 py-1.5 rounded transition-colors cursor-pointer disabled:opacity-60 ${isSaved ? 'text-[#0079D3] bg-[#e7f3ff]' : 'hover:bg-[#E9ECEF]'}`}>
+                 <svg className="w-5 h-5" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
+                 {isSaved ? 'محفوظ' : 'حفظ'}
+               </button>
                <div className="flex-grow" />
                <button 
                  onClick={() => setReportModalOpen(true)}
@@ -195,11 +211,8 @@ export default function ListingDetailClient({ initialListing, listingId }: Listi
             <div className="text-3xl font-bold text-[#1c1c1c] mb-6 border-b border-[#edeff1] pb-4">
                {formatPrice(listing.price)}
             </div>
-            {listing.profiles?.whatsapp ? (
-              <WhatsAppButton listingId={listingId} />
-            ) : (
-              <div className="bg-[#f6f7f8] text-[#787C7E] p-3 rounded text-center text-sm font-bold border border-[#edeff1]">رقم التواصل غير متوفر</div>
-            )}
+            {/* WhatsApp button always shown — reveal API reads whatsapp_number from listing row (works for guests too) */}
+            <WhatsAppButton listingId={listingId} />
             <div className="mt-4 pt-4 border-t border-[#edeff1] text-xs text-[#787C7E]">
               <span className="font-bold block mb-1">تنبيه أمان:</span>
               لا تقم بتحويل أي مبلغ مقدمًا. ابق معاملاتك المالية مرتبطة بمعاينة العقار.

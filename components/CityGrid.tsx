@@ -3,6 +3,19 @@
 import { useEffect, useState } from 'react'
 import { CITIES } from '@/types'
 
+const CITY_META: Record<string, { emoji: string; label: string }> = {
+  'Agadir':     { emoji: '🌊', label: 'أكادير' },
+  'Casablanca': { emoji: '🏢', label: 'الدار البيضاء' },
+  'Rabat':      { emoji: '🏛️', label: 'الرباط' },
+  'Fès':        { emoji: '🕌', label: 'فاس' },
+  'Marrakech':  { emoji: '🌿', label: 'مراكش' },
+  'Meknès':     { emoji: '🍇', label: 'مكناس' },
+  'Tanger':     { emoji: '⛵', label: 'طنجة' },
+  'Oujda':      { emoji: '🌄', label: 'وجدة' },
+  'Laayoune':   { emoji: '🏜️', label: 'العيون' },
+  'Dakhla':     { emoji: '🏄', label: 'الداخلة' },
+}
+
 interface CityGridProps {
   onCitySelect: (city: string) => void;
   activeCity: string;
@@ -58,31 +71,38 @@ export default function CityGrid({ onCitySelect, activeCity, onNeighborhoodSelec
           {CITIES.map((city) => {
             const count = counts[city] || 0;
             const isActive = activeCity === city;
+            const meta = CITY_META[city] || { emoji: city.charAt(0), label: city };
             
             return (
               <button
                 key={city}
                 onClick={() => onCitySelect(isActive ? 'all' : city)}
-                className={`cursor-pointer flex-shrink-0 snap-start relative group overflow-hidden transition-all duration-300 w-[100px] md:w-auto rounded-xl p-3 flex flex-col items-center justify-center gap-2 border-2 ${
+                className={`cursor-pointer flex-shrink-0 snap-start relative group overflow-hidden transition-all duration-200 w-[100px] md:w-auto rounded-2xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 ${
                   isActive 
-                    ? 'border-[#0079D3] bg-[#0079D3]/5 shadow-sm transform md:-translate-y-1' 
-                    : 'border-transparent bg-white shadow-sm hover:border-[#edeff1] hover:shadow-md hover:-translate-y-1'
+                    ? 'bg-[#0071E3] shadow-[0_4px_16px_rgba(0,113,227,0.30)] transform md:-translate-y-1' 
+                    : 'bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.10)] hover:-translate-y-0.5'
                 }`}
               >
-                {/* Icon/Letter Circle */}
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-black z-10 transition-colors ${
-                  isActive ? 'bg-[#0079D3] text-white' : 'bg-[#f0f2f5] text-[#1c1c1c] group-hover:bg-[#e4e6e9]'
+                {/* Emoji Icon */}
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-[1.4rem] transition-transform group-hover:scale-110 ${
+                  isActive ? 'bg-white/20' : 'bg-[#F2F2F7]'
                 }`}>
-                  {city.charAt(0)}
+                  {meta.emoji}
                 </div>
                 
-                <span className={`text-xs font-bold z-10 truncate w-full ${isActive ? 'text-[#0079D3]' : 'text-[#1c1c1c]'}`}>
+                <span className={`text-[11px] font-semibold z-10 truncate w-full text-center leading-tight ${
+                  isActive ? 'text-white' : 'text-[#1C1C1E]'
+                }`}>
                   {city}
                 </span>
 
-                {/* Badge */}
+                {/* Listing count badge */}
                 {count > 0 && (
-                  <div className="absolute top-2 left-2 bg-[#FF4500] text-white text-[10px] font-black px-1.5 py-0.5 rounded-full z-10 shadow-sm min-w-[20px] text-center">
+                  <div className={`absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none ${
+                    isActive 
+                      ? 'bg-white/25 text-white' 
+                      : 'bg-[#0071E3]/10 text-[#0071E3]'
+                  }`}>
                     {count}
                   </div>
                 )}

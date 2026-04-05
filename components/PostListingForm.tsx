@@ -59,7 +59,6 @@ export default function PostListingForm({ onSuccess }: PostListingFormProps) {
     
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('يجب تسجيل الدخول لنشر إعلان')
 
       const uploadedUrls: string[] = []
       
@@ -80,7 +79,8 @@ export default function PostListingForm({ onSuccess }: PostListingFormProps) {
           
           const ext = 'webp' // Convert to WEBP for better performance
           const fileName = `${uuidv4()}.${ext}`
-          const filePath = `${user.id}/${listingId}/${fileName}`
+          const creatorFolder = user ? user.id : 'guest_uploads'
+          const filePath = `${creatorFolder}/${listingId}/${fileName}`
           
           const { error: uploadError } = await supabase.storage
             .from('listing-photos')

@@ -138,15 +138,13 @@ export default function ListingCard({ listing }: ListingCardProps) {
           {/* Top Header */}
           <div className="p-3 md:p-5 flex items-center justify-between">
             <div className="flex items-center gap-2.5 md:gap-3">
-              <div className="w-9 h-9 md:w-11 md:h-11 bg-gradient-to-tr from-[#0079D3] to-[#FF4500] rounded-full flex items-center justify-center text-white font-bold shadow-sm p-[1.5px]">
-                 <div className="w-full h-full bg-white rounded-full flex items-center justify-center text-[#1c1c1c] text-sm md:text-[1.1rem] font-black">
-                   {listing.profiles?.name ? listing.profiles.name.charAt(0).toUpperCase() : 'U'}
-                 </div>
-              </div>
+          <div className="w-9 h-9 md:w-11 md:h-11 bg-[#0071E3] rounded-full flex items-center justify-center text-white font-semibold shadow-sm flex-shrink-0 text-sm md:text-base">
+               {listing.profiles?.name ? listing.profiles.name.charAt(0).toUpperCase() : 'G'}
+            </div>
               <div className="flex flex-col text-right">
                 <div className="flex items-center gap-1.5 leading-none">
                   <span className="text-[0.9rem] md:text-[1rem] font-black text-[#1c1c1c] hover:underline truncate max-w-[120px] md:max-w-none">
-                    {listing.profiles?.name || 'مستخدم'}
+                    {listing.profiles?.name || 'مستخدم ضيف'}
                   </span>
                   {isHighlyResponsive && (
                     <span className="flex items-center gap-0.5 text-[#2b8a3e] bg-[#d3f9d8] px-1.5 py-0.5 rounded-lg text-[8px] md:text-[9px] font-black tracking-wide border border-[#b2f2bb] shadow-sm flex-shrink-0">
@@ -174,28 +172,30 @@ export default function ListingCard({ listing }: ListingCardProps) {
                <h3 className="text-[1.05rem] md:text-[1.15rem] font-black text-[#050505] leading-snug tracking-tight">
                  {listing.title}
                </h3>
-               <span className="text-[#0079D3] font-black text-[1rem] md:text-[1.1rem] bg-[#e7f3ff] px-3 py-1 rounded-xl flex-shrink-0 shadow-sm border border-[#0079D3]/10 tracking-tight">
+               <span className="text-[#0071E3] font-bold text-[0.95rem] md:text-[1rem] bg-[#EAF2FF] px-3 py-1 rounded-xl flex-shrink-0 border border-[#0071E3]/10 tracking-tight">
                  {formatPrice(listing.price)}
                </span>
              </div>
              
-             <div className="flex flex-wrap gap-2 mb-3.5">
-                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-wider shadow-sm transition-transform hover:scale-105 ${isRoom ? 'bg-[#e7f3ff] text-[#0079D3] border border-[#0079D3]/20' : 'bg-[#fff0e5] text-[#ff4500] border border-[#ff4500]/20'}`}>
+             <div className="flex flex-wrap gap-2 mb-3">
+                <div className={`flex items-center px-2.5 py-1 rounded-lg text-[10px] font-semibold ${
+                  isRoom ? 'bg-[#EAF2FF] text-[#0071E3]' : 'bg-[#FFF0EE] text-[#FF3B30]'
+                }`}>
                   {listingTypeLabel(listing.type)}
                 </div>
                 
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-wider bg-[#f0f2f5] text-[#65676B] border border-[#ccd0d5] shadow-sm hover:scale-105 transition-transform">
+                <div className="flex items-center px-2.5 py-1 rounded-lg text-[10px] font-medium bg-[#F2F2F7] text-[#48484A]">
                    {listing.gender_preference === 'any' ? 'متاح للجميع' : listing.gender_preference === 'male' ? 'ذكور' : 'إناث'}
                 </div>
 
-                {listing.tags && listing.tags.map(tag => (
-                  <div key={tag} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-[#f0f2f5] to-[#f8f9fa] text-[#1c1c1c] border border-[#edeff1] shadow-sm hover:scale-105 transition-transform">
+                {listing.tags && listing.tags.slice(0, 3).map(tag => (
+                  <div key={tag} className="flex items-center px-2.5 py-1 rounded-lg text-[10px] font-medium bg-[#F2F2F7] text-[#48484A]">
                     {tag}
                   </div>
                 ))}
              </div>
 
-             <div className="text-[0.92rem] md:text-[0.98rem] text-[#050505] line-clamp-2 leading-relaxed whitespace-pre-line font-medium opacity-80 mb-1">
+             <div className="text-sm text-[#48484A] line-clamp-2 leading-relaxed whitespace-pre-line mb-1">
                  {listing.description}
              </div>
           </div>
@@ -234,9 +234,10 @@ export default function ListingCard({ listing }: ListingCardProps) {
                  e.stopPropagation();
                  router.push(`/listing/${listing.id}`);
                }}
-               className="flex items-center gap-2 bg-[#0079D3] hover:bg-[#0062ab] text-white px-6 md:px-8 py-3 rounded-2xl transition-all font-black text-xs md:text-sm shadow-[0_8px_25px_rgba(0,121,211,0.25)] active:scale-95 cursor-pointer flex-shrink-0"
+               className="flex items-center gap-2 gap-1.5 bg-[#0079D3] hover:bg-[#0062ab] text-white px-5 md:px-7 py-3 rounded-2xl transition-all font-black text-xs md:text-sm shadow-[0_8px_25px_rgba(0,121,211,0.25)] active:scale-95 cursor-pointer flex-shrink-0"
              >
-                تواصل الآن
+               <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+               عرض التفاصيل
              </button>
           </div>
       </div>

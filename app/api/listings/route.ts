@@ -90,61 +90,44 @@ export async function POST(request: Request) {
   )
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  
+  // If user exists, do integrity/ban/spam checks. If guest, skip these.
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, is_banned')
+      .eq('id', user.id)
+      .maybeSingle()
 
-  // INTEGRITY CHECK: Ensure the authenticated user has a valid profile.
-  // A "zombie" user (auth created but profile insert failed at signup) would
-  // have a session but no profile row, allowing them to post anonymously.
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('id, is_banned')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  if (!profile) {
-    return NextResponse.json(
-      { error: 'لم يتم العثور على ملف شخصي. يرجى إنشاء حساب من جديد.' },
-      { status: 403 }
-    )
-  }
-
-  // BANNED CHECK: Suspended users cannot post listings
-  if (profile.is_banned) {
-    return NextResponse.json(
-      { error: 'تم تعليق حسابك. لا يمكنك نشر إعلانات.' },
-      { status: 403 }
-    )
-  }
-
-  // SPAM PREVENTION: Check if user has already posted recently
-  const { data: recentListings } = await supabase
-    .from('listings')
-    .select('created_at')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(3)
-
-  if (recentListings && recentListings.length > 0) {
-    const lastPostTime = new Date(recentListings[0].created_at).getTime()
-    const now = new Date().getTime()
-    const cooldownMinutes = 10 
-    
-    // 1. Cooldown check (prevent rapid succession)
-    if (now - lastPostTime < cooldownMinutes * 60 * 1000) {
-      return NextResponse.json({ 
-        error: `من فضلك انتظر ${cooldownMinutes} دقائق قبل نشر إعلان آخر لحماية المجتمع من السبام.` 
-      }, { status: 429 })
+    if (!profile) {
+      return NextResponse.json({ error: 'لم يتم العثور على ملف شخصي.' }, { status: 403 })
     }
 
-    // 2. Daily limit check (max 3 ads per 24 hours)
-    const twentyFourHoursAgo = now - 24 * 60 * 60 * 1000
-    const dailyPosts = recentListings.filter(l => new Date(l.created_at).getTime() > twentyFourHoursAgo)
-    if (dailyPosts.length >= 3) {
-      return NextResponse.json({ 
-        error: 'لقد وصلت للحد الأقصى للنشر المسموح به اليوم (3 إعلانات كل 24 ساعة).' 
-      }, { status: 429 })
+    if (profile.is_banned) {
+      return NextResponse.json({ error: 'تم تعليق حسابك. لا يمكنك نشر إعلانات.' }, { status: 403 })
+    }
+
+    const { data: recentListings } = await supabase
+      .from('listings')
+      .select('created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(3)
+
+    if (recentListings && recentListings.length > 0) {
+      const lastPostTime = new Date(recentListings[0].created_at).getTime()
+      const now = new Date().getTime()
+      const cooldownMinutes = 10 
+      
+      if (now - lastPostTime < cooldownMinutes * 60 * 1000) {
+        return NextResponse.json({ error: `من فضلك انتظر ${cooldownMinutes} دقائق قبل نشر إعلان آخر لحماية المجتمع من السبام.` }, { status: 429 })
+      }
+
+      const twentyFourHoursAgo = now - 24 * 60 * 60 * 1000
+      const dailyPosts = recentListings.filter(l => new Date(l.created_at).getTime() > twentyFourHoursAgo)
+      if (dailyPosts.length >= 3) {
+        return NextResponse.json({ error: 'لقد وصلت للحد الأقصى للنشر المسموح به اليوم (3 إعلانات كل 24 ساعة).' }, { status: 429 })
+      }
     }
   }
 
@@ -154,10 +137,16 @@ export async function POST(request: Request) {
     
     const photos = Array.isArray(body.photos) ? body.photos : []
 
-    const { data, error } = await supabase
+    // Use admin client to bypass RLS since guests have no valid session user_id
+    const supabaseAdmin = await createServiceClient()
+    
+    // Default guest poster id is null
+    const posterId = user ? user.id : null
+
+    const { data, error } = await supabaseAdmin
       .from('listings')
       .insert({
-        user_id: user.id,
+        user_id: posterId,
         ...validData,
         photos,
         status: 'active',

@@ -71,6 +71,11 @@ export default function Home(props: {
       }
     }
     fetchListings()
+
+    // Re-fetch when a new listing is posted from the Navbar modal
+    const onRefresh = () => fetchListings()
+    window.addEventListener('listings:refresh', onRefresh)
+    return () => window.removeEventListener('listings:refresh', onRefresh)
   }, [filters])
 
   return (
@@ -161,36 +166,37 @@ export default function Home(props: {
           
           {/* About Widget */}
           <div className="card-widget overflow-hidden">
-            <div className="h-10 bg-[#000080] relative overflow-hidden">
-               <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 20px 20px, white 2px, transparent 0)', backgroundSize: '10px 10px' }}></div>
+            {/* Header banner with gradient */}
+            <div className="h-12 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0071E3 0%, #5E5CE6 100%)' }}>
+               <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 16px 16px, white 1.5px, transparent 0)', backgroundSize: '12px 12px' }}></div>
             </div>
             <div className="p-4 pt-0">
               <div className="flex items-end gap-2 -mt-6 mb-4">
-                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-1 relative z-10 border-2 border-[#edeff1] overflow-hidden">
+                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center p-1 relative z-10 shadow-[0_2px_8px_rgba(0,0,0,0.12)] overflow-hidden">
                    <img src="/logo_moncoloc.ma.png" alt="moncoloc.ma" className="w-full h-full object-contain" />
                 </div>
-                <h2 className="text-lg font-black text-[#1c1c1c] tracking-tight mb-0.5">moncoloc.ma</h2>
+                <h2 className="text-base font-bold text-[#1C1C1E] tracking-tight mb-0.5">moncoloc.ma</h2>
               </div>
-              <p className="text-sm text-[#1c1c1c] leading-relaxed mb-6 font-medium">
+              <p className="text-sm text-[#48484A] leading-relaxed mb-5 font-normal">
                 المجتمع الأول في المغرب للبحث عن شركاء سكن وغرف مشتركة. مساحة مبنية على الثقة والتواصل المباشر.
               </p>
               
-              <div className="flex justify-between text-center pb-6 border-b border-[#f0f0f0] mb-6">
+              <div className="flex justify-between text-center pb-5 border-b border-[rgba(60,60,67,0.10)] mb-5">
                 <div>
-                  <div className="text-sm font-black text-[#1c1c1c]">{listings.length}</div>
-                  <div className="text-[10px] font-bold text-[#787C7E] uppercase tracking-widest">إعلان</div>
+                  <div className="text-sm font-bold text-[#1C1C1E]">{listings.length}</div>
+                  <div className="text-[11px] font-medium text-[#8E8E93] mt-0.5">إعلان</div>
                 </div>
                 <div>
-                  <div className="text-sm font-black text-[#1c1c1c]">+12</div>
-                  <div className="text-[10px] font-bold text-[#787C7E] uppercase tracking-widest">مدينة</div>
+                  <div className="text-sm font-bold text-[#1C1C1E]">+12</div>
+                  <div className="text-[11px] font-medium text-[#8E8E93] mt-0.5">مدينة</div>
                 </div>
                 <div>
-                   <div className="text-sm font-black text-[#000080]">مجاني</div>
-                   <div className="text-[10px] font-bold text-[#787C7E] uppercase tracking-widest">للجميع</div>
+                   <div className="text-sm font-bold text-[#0071E3]">مجاني</div>
+                   <div className="text-[11px] font-medium text-[#8E8E93] mt-0.5">للجميع</div>
                 </div>
               </div>
 
-              <Link href="/post" className="w-full bg-[#000080] text-white py-3 rounded-xl font-black text-center flex items-center justify-center transition-all hover:bg-blue-900 active:scale-95">
+              <Link href="/post" className="w-full btn-primary py-3 rounded-2xl font-semibold text-center text-sm">
                 أضف إعلانك
               </Link>
             </div>
@@ -198,6 +204,23 @@ export default function Home(props: {
 
           {/* Filter Widget (Desktop only) */}
           <div className="hidden md:block">
+            {/* Active filter count indicator */}
+            {(() => {
+              const activeCount = [
+                filters.city !== 'all',
+                filters.type !== 'all',
+                filters.genderPreference !== 'all',
+                filters.q.trim() !== '',
+                filters.minPrice > 0,
+                filters.maxPrice > 0,
+              ].filter(Boolean).length
+              return activeCount > 0 ? (
+                <div className="flex items-center justify-between px-1 mb-2">
+                  <span className="text-xs font-bold text-[#787C7E]">فلاتر نشطة</span>
+                  <span className="bg-[#FF4500] text-white text-[10px] font-black px-2 py-0.5 rounded-full">{activeCount}</span>
+                </div>
+              ) : null
+            })()}
             <FilterBar onFilter={setFilters} initialFilters={filters} />
           </div>
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { FilterState, ListingType } from '@/types'
 import { CITIES } from '@/types'
 
@@ -11,6 +11,21 @@ interface FilterBarProps {
 
 export default function FilterBar({ onFilter, initialFilters }: FilterBarProps) {
   const [filters, setFilters] = useState<FilterState>(initialFilters)
+  const [searchQuery, setSearchQuery] = useState(initialFilters.q)
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Debounce the text search — fire API only after user stops typing for 350ms
+  useEffect(() => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current)
+    debounceTimer.current = setTimeout(() => {
+      const updated = { ...filters, q: searchQuery }
+      setFilters(updated)
+      onFilter(updated)
+    }, 350)
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current)
+    }
+  }, [searchQuery]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const update = (partial: Partial<FilterState>) => {
     const updated = { ...filters, ...partial }
@@ -30,8 +45,8 @@ export default function FilterBar({ onFilter, initialFilters }: FilterBarProps) 
             <input
               type="text"
               placeholder="مثال: أكدال، طالب، هادئ..."
-              value={filters.q}
-              onChange={(e) => update({ q: e.target.value })}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-[#f6f7f8] border border-[#edeff1] text-[#1c1c1c] text-sm rounded hover:border-[#0079D3] hover:bg-white focus:bg-white focus:border-[#0079D3] focus:outline-none transition-colors px-3 py-2 pl-8"
             />
             <div className="absolute top-1/2 left-3 transform -translate-y-1/2 pointer-events-none text-[#878A8C]">
@@ -133,6 +148,7 @@ export default function FilterBar({ onFilter, initialFilters }: FilterBarProps) 
         <button
           onClick={() => {
             const reset: FilterState = { q: '', city: 'all', neighborhood: 'all', type: 'all', minPrice: 0, maxPrice: 0, genderPreference: 'all' }
+            setSearchQuery('')
             setFilters(reset)
             onFilter(reset)
           }}

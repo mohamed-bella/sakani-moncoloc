@@ -14,7 +14,27 @@ export async function POST(request: Request) {
   )
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  
+  if (!user) {
+    // Guest User logic using cookies
+    let savedIds: string[] = []
+    try {
+      const existingCookie = cookieStore.get('guest_saved_listings')?.value
+      if (existingCookie) savedIds = JSON.parse(existingCookie)
+    } catch(e) {}
+    
+    const isSaved = savedIds.includes(listingId)
+    if (isSaved) {
+      savedIds = savedIds.filter(id => id !== listingId)
+    } else {
+      savedIds.push(listingId)
+    }
+    
+    const response = NextResponse.json({ saved: !isSaved })
+    // Securely set long-lived browser cookie to remember saved posts
+    response.cookies.set('guest_saved_listings', JSON.stringify(savedIds), { maxAge: 60 * 60 * 24 * 365, path: '/' })
+    return response
+  }
 
   // Toggle Save Logic
   const { data: existing } = await supabase
@@ -57,7 +77,16 @@ export async function GET(request: Request) {
   )
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ isSaved: false })
+  
+  if (!user) {
+    // Check locally in cookie
+    let savedIds: string[] = []
+    try {
+      const existingCookie = cookieStore.get('guest_saved_listings')?.value
+      if (existingCookie) savedIds = JSON.parse(existingCookie)
+    } catch(e) {}
+    return NextResponse.json({ isSaved: savedIds.includes(listingId) })
+  }
 
   const { data } = await supabase
     .from('saved_listings')
