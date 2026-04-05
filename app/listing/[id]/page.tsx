@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import WhatsAppButton from '@/components/WhatsAppButton'
 import ListingCard from '@/components/ListingCard'
@@ -139,6 +140,10 @@ export default function ListingDetail() {
   const photos = listing.photos || []
   const isRoom = listing.type === 'room_available'
 
+  // Calculate if the user has been active in the last 24 hours
+  const isHighlyResponsive = listing.profiles?.last_seen_at 
+    && (new Date().getTime() - new Date(listing.profiles.last_seen_at).getTime()) < 24 * 60 * 60 * 1000;
+
   return (
     <div className="w-full max-w-[1000px] mx-auto py-6 px-4 relative">
       
@@ -184,12 +189,19 @@ export default function ListingDetail() {
         
         {/* Main Post Content */}
         <div className="flex-grow w-full min-w-0 card-widget overflow-hidden">
-          
           {/* Post Header */}
           <div className="p-4 border-b border-[#edeff1]">
-            <div className="flex items-center gap-2 mb-2 text-xs text-[#787C7E]">
+            <div className="flex flex-wrap items-center gap-2 mb-2 text-xs text-[#787C7E]">
               <span className="font-bold text-[#1c1c1c]">{listing.profiles?.name || 'مستخدم غير معروف'}</span>
-              <span className="mx-1">•</span>
+              
+              {isHighlyResponsive && (
+                <span className="flex items-center gap-1 bg-[#d3f9d8] text-[#2b8a3e] px-1.5 py-0.5 rounded text-[10px] font-black tracking-wide border border-[#b2f2bb] shadow-sm animate-in fade-in">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clipRule="evenodd" /></svg>
+                  يَرُد بسرعة
+                </span>
+              )}
+
+              <span className="mx-0.5">•</span>
               <span>نُشر في {formatDate(listing.created_at)}</span>
               <span className="mx-1">•</span>
               <span>مشاهدات: {listing.view_count > 0 ? listing.view_count : 'جديد'}</span>
@@ -312,9 +324,12 @@ export default function ListingDetail() {
                 listingTitle={listing.title}
               />
             ) : (
-              <div className="bg-[#f6f7f8] text-[#787C7E] p-3 rounded text-center text-sm font-bold border border-[#edeff1]">
-                رقم التواصل غير متوفر
-              </div>
+              <Link href={`/auth/login?redirectTo=/listing/${listing.id}`} className="block w-full bg-[#f6f7f8] hover:bg-[#E9ECEF] text-[#1c1c1c] p-3 rounded text-center text-sm font-bold border border-[#edeff1] transition-colors">
+                <div className="flex items-center justify-center gap-2">
+                  <svg className="w-5 h-5 text-[#878A8C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                  سجل الدخول لإظهار رقم التواصل
+                </div>
+              </Link>
             )}
 
             <div className="mt-4 pt-4 border-t border-[#edeff1] text-xs text-[#787C7E]">

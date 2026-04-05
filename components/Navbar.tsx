@@ -25,6 +25,14 @@ export default function Navbar() {
       setUser(authUser)
 
       if (authUser) {
+        // Update user activity (debounced to once per hour to prevent DB spam)
+        const lastSync = localStorage.getItem('last_activity_sync')
+        const now = Date.now()
+        if (!lastSync || now - parseInt(lastSync) > 1000 * 60 * 60) {
+           supabase.rpc('touch_user_activity').then()
+           localStorage.setItem('last_activity_sync', now.toString())
+        }
+
         const { data: profile } = await supabase
           .from('profiles')
           .select('is_admin, is_banned')
@@ -173,19 +181,29 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Toggle */}
-          <button 
-            className="md:hidden text-[#787C7E] p-1 rounded hover:bg-[#f6f7f8]"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-               {menuOpen ? (
-                 <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-               ) : (
-                 <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-               )}
-            </svg>
-          </button>
+          {/* Mobile Toggle & Actions */}
+          <div className="flex md:hidden items-center gap-2">
+            {(!user || !isBanned) && (
+              <button 
+                onClick={handlePostClick}
+                className="btn-accent px-3 py-1 text-xs h-[32px] font-bold shadow-sm"
+              >
+                + إعلان جديد
+              </button>
+            )}
+            <button 
+              className="text-[#787C7E] p-1 rounded hover:bg-[#f6f7f8]"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 {menuOpen ? (
+                   <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                 ) : (
+                   <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                 )}
+              </svg>
+            </button>
+          </div>
 
           {/* Mobile Dropdown */}
           {menuOpen && (

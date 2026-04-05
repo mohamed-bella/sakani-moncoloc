@@ -7,6 +7,7 @@ export interface Profile {
   name: string
   whatsapp: string
   created_at: string
+  last_seen_at?: string
 }
 
 export interface Listing {

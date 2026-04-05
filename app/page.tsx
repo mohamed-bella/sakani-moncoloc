@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import FilterBar from '@/components/FilterBar'
 import ListingGrid, { ListingGridSkeleton } from '@/components/ListingGrid'
+import ResponsiveModal from '@/components/ResponsiveModal'
 import { FilterState, Listing } from '@/types'
 import Link from 'next/link'
 
@@ -40,6 +41,7 @@ export default function Home(props: {
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
 
   useEffect(() => {
     async function fetchListings() {
@@ -85,6 +87,23 @@ export default function Home(props: {
             >
               هل تبحث عن شريك سكن أو لديك غرفة؟ أضف إعلانك هنا...
             </Link>
+          </div>
+
+          {/* Mobile Filter Button */}
+          <div 
+            className="md:hidden card-widget p-3 flex items-center justify-between cursor-pointer hover:bg-[#f6f7f8] transition-colors" 
+            onClick={() => setShowMobileFilters(true)}
+          >
+             <div className="flex items-center gap-2 text-[#1c1c1c] font-bold text-sm">
+                <svg className="w-5 h-5 text-[#878A8C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                تصفية وبحث
+             </div>
+             {/* Show active filter indicator if any filters are set */}
+             {(filters.city !== 'all' || filters.type !== 'all' || filters.q !== '') && (
+                <div className="w-5 h-5 bg-[#FF4500] text-white rounded-full flex items-center justify-center text-xs font-bold leading-none animate-bounce">
+                  !
+                </div>
+             )}
           </div>
 
           {/* Feed Header */}
@@ -151,8 +170,10 @@ export default function Home(props: {
             </div>
           </div>
 
-          {/* Filter Widget */}
-          <FilterBar onFilter={setFilters} initialFilters={filters} />
+          {/* Filter Widget (Desktop only) */}
+          <div className="hidden md:block">
+            <FilterBar onFilter={setFilters} initialFilters={filters} />
+          </div>
 
           {/* Tips Widget */}
           <div className="card-widget p-6">
@@ -184,6 +205,31 @@ export default function Home(props: {
 
         </div>
       </div>
+
+      {/* Mobile Filters Modal */}
+      {showMobileFilters && (
+        <div className="md:hidden">
+          <ResponsiveModal onClose={() => setShowMobileFilters(false)} title="تصفية وبحث">
+            <div className="pb-8">
+              <FilterBar 
+                onFilter={(f) => { 
+                  setFilters(f); 
+                  // Don't auto-close modal on every input type, close it manually or add a close button inside
+                }} 
+                initialFilters={filters} 
+              />
+              <div className="px-4 mt-4">
+                <button 
+                  onClick={() => setShowMobileFilters(false)}
+                  className="btn-primary w-full py-3"
+                >
+                  إظهار النتائج
+                </button>
+              </div>
+            </div>
+          </ResponsiveModal>
+        </div>
+      )}
     </div>
   )
 }

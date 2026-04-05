@@ -20,11 +20,17 @@ export async function GET(
     return NextResponse.json({ error: 'إعلان غير موجود' }, { status: 404 })
   }
 
+  const { data: { user } } = await supabase.auth.getUser()
+
   // Fetch profile separately bypassing RLS since profiles only allow self-view by default
   const supabaseAdmin = await createServiceClient()
+  
+  // Security Feature: Only expose WhatsApp number to authenticated users to prevent scraping
+  const profileSelectQuery = user ? 'name, whatsapp, last_seen_at' : 'name, last_seen_at'
+  
   const { data: profileData } = await supabaseAdmin
     .from('profiles')
-    .select('name, whatsapp')
+    .select(profileSelectQuery)
     .eq('id', listingData.user_id)
     .single()
 
@@ -45,14 +51,20 @@ export async function PATCH(
 
   try {
     const body = await request.json()
-    // Check if listing is locked by admin first
+    // Check if listing is locked by admin first, and verify ownership
     const { data: listing, error: checkError } = await supabase
       .from('listings')
-      .select('locked_by_admin')
+      .select('locked_by_admin, user_id')
       .eq('id', id)
       .single()
 
     if (checkError) throw checkError
+    
+    // Explicit Authorization Check: block modifying non-authorized listings
+    if (listing?.user_id !== user.id) {
+       return NextResponse.json({ error: 'غير مصرح لك بتعديل هذا الإعلان' }, { status: 403 })
+    }
+
     if (listing?.locked_by_admin) {
       return NextResponse.json({ error: 'تم إغلاق هذا الإعلان بواسطة الإدارة ولا يمكن تعديله. يرجى التواصل مع الدعم.' }, { status: 403 })
     }

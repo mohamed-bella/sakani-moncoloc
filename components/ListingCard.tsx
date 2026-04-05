@@ -24,6 +24,10 @@ export default function ListingCard({ listing }: ListingCardProps) {
     setReportModalOpen(true)
   }
 
+  // 24 Hour window for "Highly Responsive" / "Active Today"
+  const isHighlyResponsive = listing.profiles?.last_seen_at 
+    && (new Date().getTime() - new Date(listing.profiles.last_seen_at).getTime()) < 24 * 60 * 60 * 1000;
+
   return (
     <>
       {reportModalOpen && (
@@ -69,9 +73,17 @@ export default function ListingCard({ listing }: ListingCardProps) {
             
             {/* Top Meta Info */}
             <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2 text-xs text-[#787C7E]">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-[#787C7E]">
                 <span className="font-bold text-[#1c1c1c]">مُعلن</span>
-                <span className="mx-1">•</span>
+                
+                {isHighlyResponsive && (
+                  <span className="flex items-center gap-1 bg-[#d3f9d8] text-[#2b8a3e] px-1.5 py-0.5 rounded text-[10px] font-black tracking-wide border border-[#b2f2bb] shadow-sm animate-in fade-in">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clipRule="evenodd" /></svg>
+                    يَرُد بسرعة
+                  </span>
+                )}
+
+                <span className="mx-0.5 hidden sm:inline">•</span>
                 <span>
                   {listing.city} {listing.neighborhood && `- ${listing.neighborhood}`}
                 </span>

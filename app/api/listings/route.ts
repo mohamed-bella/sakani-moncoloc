@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { createServiceClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import { ListingSchema } from '@/lib/validations'
 
@@ -21,7 +22,7 @@ export async function GET(request: Request) {
 
   let query = supabase
     .from('listings')
-    .select('id, type, title, description, city, neighborhood, price, gender_preference, photos, status, view_count, created_at')
+    .select('id, type, title, description, city, neighborhood, price, gender_preference, photos, status, view_count, created_at, user_id')
     .eq('status', 'active')
     .order('created_at', { ascending: false })
 
@@ -53,7 +54,26 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ listings: data })
+  // Admin Side-load to attach host activity safely without exposing personal profiles
+  const userIds = [...new Set(data.map((l: any) => l.user_id))]
+  const supabaseAdmin = await createServiceClient()
+  const { data: profilesData } = await supabaseAdmin
+    .from('profiles')
+    .select('id, last_seen_at')
+    .in('id', userIds)
+
+  const profilesMap = new Map(profilesData?.map((p: any) => [p.id, p]) || [])
+
+  const enrichedData = data.map((l: any) => {
+    // We don't want to expose user_id in public API responses if not needed,
+    // but the frontend uses it, so we leave it. Or we just attach profiles.
+    return {
+      ...l,
+      profiles: profilesMap.get(l.user_id) || null
+    }
+  })
+
+  return NextResponse.json({ listings: enrichedData })
 }
 
 export async function POST(request: Request) {
