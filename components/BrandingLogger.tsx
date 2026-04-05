@@ -9,27 +9,46 @@ export default function BrandingLogger() {
     if (hasLogged.current) return
     hasLogged.current = true
 
-    const ascii = `
-%c
-                                      _       _             
-  _ __ ___   ___  _ __   ___ ___ | | ___   ___ 
- | '_ \` _ \\ / _ \\| '_ \\ / __/ _ \\| |/ _ \\ / __|
- | | | | | | (_) | | | | (__ (_) | | (_) | (__ 
- |_| |_| |_|\\___/|_| |_|\\___\\___/|_|\\___/ \\___|
-                                                
-    Premium Roommate Finding Platform
-    Developed with ❤️ by Antigravity
-    `
+    const logoLines = [
+      "",
+      "  %c  __  __   ____   _   _   ____   ___   _       ___    ____ ",
+      " %c |  \\/  | / __ \\ | \\ | | / ___| / _ \\ | |     / _ \\  / ___|",
+      " %c | |\\/| || |  | ||  \\| || |    | | | || |    | | | || |    ",
+      " %c | |  | || |__| || |\\  || |___ | |_| || |___ | |_| || |___ ",
+      " %c |_|  |_| \\____/ |_| \\_| \\____| \\___/ |_____| \\___/  \\____|",
+      " %c                                                          ",
+      " %c       >> Roommate & Shared Living Ecosystem <<          ",
+      ""
+    ]
 
-    console.log(
-      ascii,
-      'color: #0079D3; font-weight: bold; font-family: monospace; line-height: 1.2;'
-    )
+    const subText = [
+      "%c----------------------------------------------------------",
+      "%c 🛠️  BUILT BY  : MOHAMED BELLA",
+      "%c 📧  CONTACT   : mohamedbella235@gmail.com",
+      "%c ✨  STATUS    : System Initialized Successfully",
+      "%c----------------------------------------------------------",
+      ""
+    ]
+
+    let delay = 0
     
-    console.log(
-      '%c🚀 SAKANI AUTH: System initialized successfully.',
-      'color: #FF4500; font-weight: bold; background: #FFF0E5; padding: 4px 8px; border-radius: 4px;'
-    )
+    // Animate Logo
+    logoLines.forEach((line, i) => {
+      setTimeout(() => {
+        console.log(line, 'color: #0079D3; font-weight: bold; font-family: monospace;')
+      }, delay)
+      delay += 80
+    })
+
+    // Animate Info
+    subText.forEach((line, i) => {
+      setTimeout(() => {
+        const color = i === 1 || i === 2 ? 'color: #FF4500; font-weight: 800;' : 'color: #878A8C; font-weight: 500;'
+        console.log(line, `${color} font-family: system-ui;`)
+      }, delay)
+      delay += 100
+    })
+
   }, [])
 
   return null
