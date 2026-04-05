@@ -1,0 +1,149 @@
+import { NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+import { ListingSchema } from '@/lib/validations'
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const city = searchParams.get('city')
+  const type = searchParams.get('type')
+  const gender = searchParams.get('genderPreference')
+  const minPrice = searchParams.get('minPrice')
+  const maxPrice = searchParams.get('maxPrice')
+  const q = searchParams.get('q')
+  
+  const cookieStore = await cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
+  )
+
+  let query = supabase
+    .from('listings')
+    .select('id, type, title, description, city, neighborhood, price, gender_preference, photos, status, view_count, created_at')
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+
+  if (city && city !== 'all') {
+    query = query.eq('city', city)
+  }
+  if (type && type !== 'all') {
+    query = query.eq('type', type)
+  }
+  if (gender && gender !== 'all') {
+    query = query.eq('gender_preference', gender)
+  }
+  
+  if (minPrice && parseInt(minPrice) > 0) {
+    query = query.gte('price', parseInt(minPrice))
+  }
+  if (maxPrice && parseInt(maxPrice) > 0) {
+    query = query.lte('price', parseInt(maxPrice))
+  }
+  
+  if (q && q.trim().length > 0) {
+    // websearch config allows for more natural search terms
+    query = query.textSearch('fts', q, { config: 'simple', type: 'websearch' })
+  }
+
+  const { data, error } = await query
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ listings: data })
+}
+
+export async function POST(request: Request) {
+  const cookieStore = await cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
+  )
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // INTEGRITY CHECK: Ensure the authenticated user has a valid profile.
+  // A "zombie" user (auth created but profile insert failed at signup) would
+  // have a session but no profile row, allowing them to post anonymously.
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id, is_banned')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (!profile) {
+    return NextResponse.json(
+      { error: 'لم يتم العثور على ملف شخصي. يرجى إنشاء حساب من جديد.' },
+      { status: 403 }
+    )
+  }
+
+  // BANNED CHECK: Suspended users cannot post listings
+  if (profile.is_banned) {
+    return NextResponse.json(
+      { error: 'تم تعليق حسابك. لا يمكنك نشر إعلانات.' },
+      { status: 403 }
+    )
+  }
+
+  // SPAM PREVENTION: Check if user has already posted recently
+  const { data: recentListings } = await supabase
+    .from('listings')
+    .select('created_at')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(3)
+
+  if (recentListings && recentListings.length > 0) {
+    const lastPostTime = new Date(recentListings[0].created_at).getTime()
+    const now = new Date().getTime()
+    const cooldownMinutes = 10 
+    
+    // 1. Cooldown check (prevent rapid succession)
+    if (now - lastPostTime < cooldownMinutes * 60 * 1000) {
+      return NextResponse.json({ 
+        error: `من فضلك انتظر ${cooldownMinutes} دقائق قبل نشر إعلان آخر لحماية المجتمع من السبام.` 
+      }, { status: 429 })
+    }
+
+    // 2. Daily limit check (max 3 ads per 24 hours)
+    const twentyFourHoursAgo = now - 24 * 60 * 60 * 1000
+    const dailyPosts = recentListings.filter(l => new Date(l.created_at).getTime() > twentyFourHoursAgo)
+    if (dailyPosts.length >= 3) {
+      return NextResponse.json({ 
+        error: 'لقد وصلت للحد الأقصى للنشر المسموح به اليوم (3 إعلانات كل 24 ساعة).' 
+      }, { status: 429 })
+    }
+  }
+
+  try {
+    const body = await request.json()
+    const validData = ListingSchema.parse(body)
+    
+    const photos = Array.isArray(body.photos) ? body.photos : []
+
+    const { data, error } = await supabase
+      .from('listings')
+      .insert({
+        user_id: user.id,
+        ...validData,
+        photos,
+        status: 'active',
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return NextResponse.json({ listing: data })
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 400 })
+  }
+}
