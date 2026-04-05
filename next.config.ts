@@ -19,8 +19,8 @@ export default withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options
 
-  org: "moncoloc", // replace with your org slug
-  project: "sakani", // replace with your project slug
+  org: "moncoloc",
+  project: "sakani",
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
@@ -33,7 +33,4 @@ export default withSentryConfig(nextConfig, {
 
   // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
   tunnelRoute: "/monitoring",
-
-  // Automatically tree-shake Sentry logger statements to reduce bundle size
-  // Note: disableLogger is deprecated and not supported in Turbopack.
 });

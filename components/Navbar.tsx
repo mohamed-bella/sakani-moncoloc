@@ -158,11 +158,19 @@ export default function Navbar() {
                     )}
                   </div>
                   <div className="flex flex-col">
-                    <span className={`text-[0.65rem] font-bold leading-none mb-1 ${
-                      isBanned ? 'text-[#FF4500]' : 'text-[#1c1c1c]'
-                    }`}>
-                      {isBanned ? '⛔ موقوف' : user.email?.split('@')[0]}
-                    </span>
+                    <div className="flex items-center gap-1.5 leading-none mb-1">
+                      <span className={`text-[0.65rem] font-bold ${
+                        isBanned ? 'text-[#FF4500]' : 'text-[#1c1c1c]'
+                      }`}>
+                        {isBanned ? '⛔ موقوف' : user.email?.split('@')[0]}
+                      </span>
+                      {isAdmin && (
+                        <span className="flex items-center gap-0.5 bg-[#FF4500]/10 text-[#FF4500] px-1 py-0.5 rounded text-[8px] font-black border border-[#FF4500]/20 uppercase">
+                          <svg className="w-2 h-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z"/></svg>
+                          ADMIN
+                        </span>
+                      )}
+                    </div>
                     <button onClick={handleLogout} className="text-[0.65rem] text-[#787C7E] hover:text-[#0079D3] leading-none text-right">خروج</button>
                   </div>
                 </div>

@@ -1,7 +1,5 @@
--- ============================================================
--- MIGRATION 012 — Atomic Profile Creation via Triggers
--- This ensures account integrity. Every auth.user MUST have a profile.
--- ============================================================
+-- 0. Enable required extension
+create extension if not exists pgcrypto;
 
 -- 1. Function to handle new user creation
 create or replace function public.handle_new_user()
@@ -9,16 +7,28 @@ returns trigger
 language plpgsql
 security definer set search_path = public
 as $$
+declare
+  final_name text;
+  final_whatsapp text;
 begin
-  insert into public.profiles (id, name, whatsapp, is_admin, is_banned)
-  values (
-    new.id,
-    coalesce(new.raw_user_meta_data->>'name', 'مستخدم الجديد'),
-    coalesce(new.raw_user_meta_data->>'whatsapp', 'rec_' || encode(gen_random_bytes(6), 'hex')),
-    false,
-    false
-  )
-  on conflict (id) do nothing;
+  final_name := coalesce(new.raw_user_meta_data->>'name', 'مستخدم جديد');
+  final_whatsapp := coalesce(new.raw_user_meta_data->>'whatsapp', 'rec_' || encode(gen_random_bytes(6), 'hex'));
+
+  begin
+    insert into public.profiles (id, name, whatsapp, is_admin, is_banned)
+    values (new.id, final_name, final_whatsapp, false, false)
+    on conflict (id) do update set
+      name = excluded.name,
+      whatsapp = excluded.whatsapp;
+  exception when unique_violation then
+    -- If whatsapp is taken by someone else, use a unique recovery ID instead of failing
+    insert into public.profiles (id, name, whatsapp, is_admin, is_banned)
+    values (new.id, final_name, 'dup_' || encode(gen_random_bytes(6), 'hex'), false, false)
+    on conflict (id) do nothing;
+  exception when others then
+    -- Catch all other errors
+  end;
+  
   return new;
 end;
 $$;
