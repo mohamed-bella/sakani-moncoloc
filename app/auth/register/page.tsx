@@ -42,28 +42,20 @@ export default function RegisterPage() {
       if (checkError) throw checkError
       if (existing) throw new Error('رقم الواتساب مسجل مسبقاً. يرجى تسجيل الدخول.')
 
-      // ─── STEP 2: Create the auth user ─────────────────────────
+      // ─── STEP 2: Create the auth user (Trigger will handle profile via metadata) ──
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password: data.password,
+        options: {
+          data: {
+            name: data.name,
+            whatsapp: normalizedWhatsApp,
+          },
+        },
       })
 
       if (authError) throw authError
       if (!authData.user) throw new Error('حدث خطأ أثناء إنشاء الحساب')
-
-      // ─── STEP 3: Insert profile ──────────────────────────────
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: authData.user.id,
-          name: data.name,
-          whatsapp: normalizedWhatsApp,
-        })
-
-      if (profileError) {
-        await supabase.auth.signOut()
-        throw profileError
-      }
 
       router.push('/dashboard')
       router.refresh()

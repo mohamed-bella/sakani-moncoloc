@@ -72,7 +72,7 @@ export default function ListingDetailClient({ initialListing, listingId }: Listi
       try {
         await navigator.share(shareData)
       } catch (err) {
-        console.error('Share failed', err)
+        // Silent fail for share
       }
     } else {
       navigator.clipboard.writeText(window.location.href)

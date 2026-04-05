@@ -15,7 +15,7 @@ export default function TestSentry() {
         }
     });
 
-    console.log("Sentry event captured manually.");
+    // Sentry event captured manually
   }, []);
 
   return (

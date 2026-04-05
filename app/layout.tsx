@@ -3,6 +3,7 @@ import { Tajawal } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import BrandingLogger from '@/components/BrandingLogger'
 
 const tajawal = Tajawal({
   subsets: ['arabic', 'latin'],
@@ -32,6 +33,7 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" className={tajawal.variable}>
       <body className="antialiased min-h-screen flex flex-col" style={{ fontFamily: "var(--font-tajawal), sans-serif" }}>
+        <BrandingLogger />
         
         {/* Sticky Header - Navbar handles its own positioning */}
         <Navbar />

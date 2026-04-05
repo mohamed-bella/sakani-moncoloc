@@ -37,7 +37,7 @@ export default function Navbar() {
           .from('profiles')
           .select('is_admin, is_banned')
           .eq('id', authUser.id)
-          .single()
+          .maybeSingle() // Consistency fix: avoid 406
         setIsAdmin(profile?.is_admin ?? false)
         setIsBanned(profile?.is_banned ?? false)
       }
@@ -58,10 +58,17 @@ export default function Navbar() {
           .from('profiles')
           .select('is_admin, is_banned')
           .eq('id', session.user.id)
-          .single()
+          .maybeSingle() // Use maybeSingle to avoid 406 error if row is missing
           .then(({ data }) => {
-            setIsAdmin(data?.is_admin ?? false)
-            setIsBanned(data?.is_banned ?? false)
+            if (data) {
+              setIsAdmin(data.is_admin ?? false)
+              setIsBanned(data.is_banned ?? false)
+            } else {
+              // Row missing: either not created yet or logic error.
+              // We'll safely fallback to guest permissions.
+              setIsAdmin(false)
+              setIsBanned(false)
+            }
           })
       }
     })
