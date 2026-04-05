@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -26,6 +26,7 @@ export default function PostListingForm({ onSuccess }: PostListingFormProps) {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<ListingFormData>({
     resolver: zodResolver(ListingSchema),
@@ -38,6 +39,19 @@ export default function PostListingForm({ onSuccess }: PostListingFormProps) {
   })
 
   const listingType = watch('type')
+
+  useEffect(() => {
+    async function loadUserWhatsapp() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data } = await supabase.from('profiles').select('whatsapp').eq('id', user.id).single()
+        if (data?.whatsapp) {
+          setValue('whatsapp_number', data.whatsapp)
+        }
+      }
+    }
+    loadUserWhatsapp()
+  }, [supabase, setValue])
 
   const onSubmit = async (data: ListingFormData) => {
     setIsSubmitting(true)
@@ -168,6 +182,12 @@ export default function PostListingForm({ onSuccess }: PostListingFormProps) {
           </div>
 
           <div>
+            <label className="block text-sm font-bold text-[#1c1c1c] mb-2 text-right">رقم الواتساب للتواصل بخصوص هذا الإعلان <span className="text-[#FF4500]">*</span></label>
+            <input type="tel" {...register('whatsapp_number')} className="w-full px-4 py-3 bg-[#f6f7f8] border-2 border-[#edeff1] rounded-xl text-base focus:outline-none focus:border-[#0079D3] focus:bg-white transition-colors text-left font-medium placeholder:text-[#878A8C]" dir="ltr" placeholder="مثال: 0612345678" disabled={isSubmitting} />
+            {errors.whatsapp_number && <p className="text-[#FF4500] text-xs mt-1 text-right font-bold">{errors.whatsapp_number.message}</p>}
+          </div>
+
+          <div>
             <label className="block text-sm font-bold text-[#1c1c1c] mb-3 text-right">من تفضل كشريك سكن؟ <span className="text-[#FF4500]">*</span></label>
             <div className="grid grid-cols-3 gap-3">
               {[
@@ -244,7 +264,7 @@ export default function PostListingForm({ onSuccess }: PostListingFormProps) {
         </div>
 
         {/* Floating Navigation Footer */}
-        <div className="fixed sm:sticky bottom-0 left-0 right-0 p-4 sm:p-0 sm:pt-6 bg-white sm:bg-transparent border-t border-[#edeff1] sm:border-t-0 mt-auto flex gap-3 z-20 shadow-[0_-4px_6px_-1px_rgb(0,0,0,0.05)] sm:shadow-none pb-safe">
+        <div className="fixed sm:sticky bottom-[64px] sm:bottom-0 left-0 right-0 p-4 sm:p-0 sm:pt-6 bg-white sm:bg-transparent border-t border-[#edeff1] sm:border-t-0 mt-auto flex gap-3 z-20 shadow-[0_-4px_6px_-1px_rgb(0,0,0,0.05)] sm:shadow-none pb-safe">
           <button type="submit" disabled={isSubmitting} className="flex-grow btn-primary py-3.5 text-base shadow-sm">
             {isSubmitting ? 'جاري النشر...' : 'أضف الإعلان الآن'}
           </button>

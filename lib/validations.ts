@@ -43,6 +43,10 @@ export const ListingSchema = z.object({
     .max(50000, 'السعر مرتفع جداً'),
   gender_preference: z.enum(['any', 'male', 'female']),
   tags: z.array(z.string()).optional(),
+  whatsapp_number: z
+    .string()
+    .min(9, 'رقم واتساب غير صحيح')
+    .regex(/^[0-9]+$/, 'يجب أن يحتوي الرقم على أرقام فقط'),
 })
 
 export type RegisterFormData = z.infer<typeof RegisterSchema>

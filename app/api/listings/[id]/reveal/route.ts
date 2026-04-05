@@ -25,24 +25,31 @@ export async function POST(
     return NextResponse.json({ error: 'فشل في إظهار رقم التواصل' }, { status: 500 })
   }
 
-  // 3. Get the listing owner's number
+  // 3. Get the listing owner's specific number for this ad
   const { data: listing } = await supabase
     .from('listings')
-    .select('user_id, title')
+    .select('user_id, title, whatsapp_number')
     .eq('id', id)
     .single()
 
   if (!listing) return NextResponse.json({ error: 'الإعلان غير موجود' }, { status: 404 })
 
-  const supabaseAdmin = await createServiceClient()
-  const { data: profile } = await supabaseAdmin
-    .from('profiles')
-    .select('whatsapp')
-    .eq('id', listing.user_id)
-    .single()
+  let targetNumber = listing.whatsapp_number
 
-  if (!profile?.whatsapp) return NextResponse.json({ error: 'لم يتم العثور على رقم تواصل' }, { status: 404 })
+  if (!targetNumber) {
+    // Fallback to profile whatsapp for older listings
+    const supabaseAdmin = await createServiceClient()
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('whatsapp')
+      .eq('id', listing.user_id)
+      .single()
+      
+    targetNumber = profile?.whatsapp
+  }
 
-  const url = buildWhatsAppUrl(profile.whatsapp, listing.title)
+  if (!targetNumber) return NextResponse.json({ error: 'لم يتم العثور على رقم تواصل' }, { status: 404 })
+
+  const url = buildWhatsAppUrl(targetNumber, listing.title)
   return NextResponse.json({ url })
 }
