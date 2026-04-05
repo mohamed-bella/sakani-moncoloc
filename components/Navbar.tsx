@@ -16,7 +16,7 @@ export default function Navbar() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [isBanned, setIsBanned] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [menuOpen, setMenuOpen] = useState(false)
+
   const [showPostModal, setShowPostModal] = useState(false)
 
   useEffect(() => {
@@ -181,66 +181,24 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Toggle & Actions */}
-          <div className="flex md:hidden items-center gap-2">
-            {(!user || !isBanned) && (
-              <button 
-                onClick={handlePostClick}
-                className="btn-accent px-3 py-1 text-xs h-[32px] font-bold shadow-sm"
-              >
-                + إعلان جديد
-              </button>
-            )}
-            <button 
-              className="text-[#787C7E] p-1 rounded hover:bg-[#f6f7f8]"
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                 {menuOpen ? (
-                   <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                 ) : (
-                   <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                 )}
-              </svg>
+          {/* Mobile Bottom Navigation (Instagram Style) */}
+          <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#edeff1] h-[64px] z-50 flex items-center justify-around pb-safe shadow-[0_-2px_10px_rgba(0,0,0,0.02)]">
+            <Link href="/" className={`flex flex-col items-center justify-center w-full h-full pb-1 transition-colors ${isActive('/') ? 'text-[#1c1c1c]' : 'text-[#878A8C] hover:text-[#1c1c1c]'}`}>
+              <svg className="w-6 h-6 mb-1" fill={isActive('/') ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isActive('/') ? "0" : "2"} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+              <span className="text-[10px] font-bold">الرئيسية</span>
+            </Link>
+            
+            <button onClick={handlePostClick} className="flex flex-col items-center justify-center w-full h-full -mt-6">
+              <div className="bg-[#FF4500] hover:bg-[#ff5414] active:scale-95 transition-all text-white rounded-full p-3.5 shadow-[0_4px_12px_rgba(255,69,0,0.3)]">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
+              </div>
             </button>
-          </div>
 
-          {/* Mobile Dropdown */}
-          {menuOpen && (
-            <div className="absolute top-[48px] left-0 right-0 bg-white border-b border-[#ccc] shadow-lg flex flex-col items-stretch p-4 md:hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                <Link href="/" className="py-3 text-sm font-bold border-b border-[#f0f0f0]" onClick={() => setMenuOpen(false)}>الرئيسية</Link>
-                
-                {user ? (
-                   <>
-                     <Link href="/dashboard" className="py-3 text-sm font-bold border-b border-[#f0f0f0]" onClick={() => setMenuOpen(false)}>لوحة التحكم</Link>
-                     {isAdmin && (
-                       <Link href="/admin" className="py-3 text-sm font-bold border-b border-[#f0f0f0] text-[#FF4500] flex items-center gap-2" onClick={() => setMenuOpen(false)}>
-                         🛡️ لوحة الإدارة
-                       </Link>
-                     )}
-                     {!isBanned && (
-                       <button 
-                        onClick={() => { handlePostClick(); setMenuOpen(false); }}
-                        className="py-3 text-sm font-bold border-b border-[#f0f0f0] text-[#FF4500] text-right"
-                       >
-                         + أضف إعلانك
-                       </button>
-                     )}
-                     <button onClick={() => { handleLogout(); setMenuOpen(false); }} className="py-3 text-sm font-bold text-right text-[#787C7E] cursor-pointer">تسجيل الخروج</button>
-                   </>
-                ) : (
-                   <div className="pt-4 flex flex-col gap-3">
-                     <button 
-                        onClick={() => { handlePostClick(); setMenuOpen(false); }}
-                        className="btn-accent w-full py-2"
-                     >
-                        + أضف إعلانك
-                     </button>
-                     <Link href="/auth/login" className="btn-outline w-full py-2" onClick={() => setMenuOpen(false)}>دخول</Link>
-                   </div>
-                )}
-            </div>
-          )}
+            <Link href={user ? "/dashboard" : "/auth/login"} className={`flex flex-col items-center justify-center w-full h-full pb-1 transition-colors ${isActive('/dashboard') || isActive('/auth/login') ? 'text-[#1c1c1c]' : 'text-[#878A8C] hover:text-[#1c1c1c]'}`}>
+               <svg className="w-6 h-6 mb-1" fill={isActive('/dashboard') || isActive('/auth/login') ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isActive('/dashboard') || isActive('/auth/login') ? "0" : "2"} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+               <span className="text-[10px] font-bold">{user ? 'حسابي' : 'دخول'}</span>
+            </Link>
+          </div>
 
           {/* Post Listing Modal (Sheet on mobile) */}
           {showPostModal && (

@@ -38,7 +38,7 @@ export default function RootLayout({
 
 
         {/* Main Content Area */}
-        <main className="flex-grow">
+        <main className="flex-grow pb-[80px] md:pb-0">
           {children}
         </main>
 

@@ -76,17 +76,29 @@ export default function Home(props: {
         {/* Main Feed Column */}
         <div className="flex-grow w-full min-w-0 flex flex-col gap-4">
           
-          {/* Create Post Banner */}
-          <div className="card-widget p-3 flex items-center gap-3">
-            <div className="w-9 h-9 bg-[#f0f0f0] rounded-full flex items-center justify-center text-[#787C7E]">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+          {/* Social Media Style 'Create Post' Trigger */}
+          <div className="bg-white rounded-xl shadow-sm border border-[#edeff1] p-4 flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#f0f2f5] rounded-full flex items-center justify-center text-[#787C7E] flex-shrink-0">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+              </div>
+              <Link 
+                href="/post" 
+                className="flex-grow bg-[#f0f2f5] hover:bg-[#e4e6e9] text-[#65676B] text-right px-4 py-2.5 rounded-full transition-colors text-sm font-medium cursor-text"
+              >
+                ماذا يوجد في ذهنك، هل تبحث عن سكن أو شريك؟
+              </Link>
             </div>
-            <Link 
-              href="/post" 
-              className="flex-grow bg-[#E9ECEF] hover:bg-[#DAE0E6] text-[#787C7E] px-4 py-2 rounded border border-[#E9ECEF] transition-colors text-sm font-bold"
-            >
-              هل تبحث عن شريك سكن أو لديك غرفة؟ أضف إعلانك هنا...
-            </Link>
+            <div className="flex border-t border-[#f0f2f5] pt-2 mt-1">
+              <Link href="/post" className="flex-1 flex items-center justify-center gap-2 py-1.5 hover:bg-[#f2f2f2] rounded-lg transition-colors text-[#65676B] font-bold text-xs cursor-pointer">
+                <span className="text-[#45BD62]"><svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 14H7v-4h10v4zm0-6H7V7h10v4z"/></svg></span>
+                صورة / فيديو
+              </Link>
+              <Link href="/post" className="flex-1 flex items-center justify-center gap-2 py-1.5 hover:bg-[#f2f2f2] rounded-lg transition-colors text-[#65676B] font-bold text-xs cursor-pointer">
+                <span className="text-[#F5533D]"><svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></span>
+                تحديد الموقع
+              </Link>
+            </div>
           </div>
 
           {/* Mobile Filter Button */}

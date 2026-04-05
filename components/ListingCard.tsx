@@ -48,108 +48,101 @@ export default function ListingCard({ listing }: ListingCardProps) {
         </div>
       )}
 
-      <Link href={`/listing/${listing.id}`} className="card-widget block hover:border-[#898989] transition-colors overflow-hidden relative group">
-        <div className="flex flex-col sm:flex-row">
-          
-          {/* Vote Column (Dummy visual element to mimic Reddit structure) */}
-          <div className="hidden sm:flex flex-col items-center p-2 bg-[#F8F9FA] border-l border-[#edeff1] min-w-[40px]">
-            <svg className="w-6 h-6 text-[#878A8C] hover:text-[#FF4500] hover:bg-[#E9ECEF] rounded cursor-pointer p-0.5 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7"></path></svg>
-            <span className="text-xs font-bold text-[#1c1c1c] my-1">
-              {listing.view_count > 0 ? listing.view_count : '•'}
-            </span>
-            <svg className="w-6 h-6 text-[#878A8C] hover:text-[#7193ff] hover:bg-[#E9ECEF] rounded cursor-pointer p-0.5 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+      <div className="bg-white md:rounded-xl shadow-sm border-t border-b md:border border-[#edeff1] mb-6 md:mb-8 overflow-hidden flex flex-col">
+          {/* Top Header */}
+          <div className="p-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-tr from-[#000080] to-[#FF4500] rounded-full flex items-center justify-center text-white font-bold shadow-sm p-[2px]">
+                 <div className="w-full h-full bg-white rounded-full flex items-center justify-center text-[#1c1c1c] text-[1rem]">
+                   {listing.profiles?.name ? listing.profiles.name.charAt(0).toUpperCase() : 'U'}
+                 </div>
+              </div>
+              <div className="flex flex-col text-right">
+                <span className="text-[0.9rem] font-bold text-[#1c1c1c] flex items-center gap-1">
+                  {listing.profiles?.name || 'مستخدم'}
+                  {isHighlyResponsive && (
+                    <span className="flex items-center gap-0.5 text-[#2b8a3e] bg-[#d3f9d8] px-1 rounded-[4px] text-[9px] font-black tracking-wide border border-[#b2f2bb] ml-1">
+                      <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clipRule="evenodd" /></svg>
+                      يَرُد بسرعة
+                    </span>
+                  )}
+                </span>
+                <span className="text-[11px] font-bold text-[#878A8C] flex items-center gap-1">
+                  {listing.city} {listing.neighborhood && `• ${listing.neighborhood}`}
+                </span>
+              </div>
+            </div>
+
+            <button onClick={handleReportClick} className="text-[#878A8C] hover:text-[#1c1c1c] p-1.5 transition-colors" title="تبليغ">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg>
+            </button>
           </div>
 
-          {/* Minimal Mobile Vote Header */}
-          <div className="sm:hidden flex items-center justify-between px-3 pt-2 pb-1 border-b border-[#edeff1] bg-[#F8F9FA]">
-             <div className="flex items-center gap-1">
-               <span className="text-[0.65rem] font-bold text-[#787C7E]">مشاهدات:</span>
-               <span className="text-[0.65rem] font-bold text-[#1c1c1c]">{listing.view_count > 0 ? listing.view_count : 'جديد'}</span>
+          {/* Edge-to-Edge Media */}
+          <Link href={`/listing/${listing.id}`} className="block relative w-full aspect-[4/3] sm:aspect-video bg-[#F0F2F5] transition-opacity hover:opacity-95 overflow-hidden">
+            {firstPhoto ? (
+              <Image
+                src={firstPhoto}
+                alt={listing.title}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 800px"
+              />
+            ) : (
+               <div className="absolute inset-0 flex flex-col items-center justify-center text-[#878A8C] gap-2 bg-[#e9ecef]">
+                 <svg className="w-12 h-12 opacity-30" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 14H7v-4h10v4zm0-6H7V7h10v4z"/></svg>
+                 <span className="text-xs font-bold opacity-60">بدون صور</span>
+               </div>
+            )}
+            
+            {/* Overlay Price/Type Tag */}
+            <div className="absolute bottom-3 right-3 flex flex-col gap-1.5 items-end">
+              <span className={`px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide shadow-sm ${isRoom ? 'bg-[#000080] text-white' : 'bg-[#FF4500] text-white'}`}>
+                  {listingTypeLabel(listing.type)}
+              </span>
+              <span className="bg-white/95 backdrop-blur text-[#1c1c1c] px-3 py-1 rounded-full text-sm font-black shadow-md border border-white">
+                {formatPrice(listing.price)}
+              </span>
+            </div>
+            
+            {/* View Count top left */}
+            <div className="absolute top-3 left-3 bg-black/60 backdrop-blur text-white px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1.5 border border-white/10">
+               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+               {listing.view_count}
+            </div>
+          </Link>
+
+          {/* Action Row */}
+          <div className="px-3 pt-3 flex items-center justify-between">
+             <div className="flex items-center gap-4">
+               <button className="hover:opacity-60 transition-opacity text-[#1c1c1c]">
+                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+               </button>
+               <Link href={`/listing/${listing.id}`} className="hover:opacity-60 transition-opacity text-[#1c1c1c]">
+                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+               </Link>
+               <button className="hover:opacity-60 transition-opacity text-[#1c1c1c]">
+                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+               </button>
+             </div>
+             
+             <div className="flex gap-1.5">
+               <span className="bg-[#f0f2f5] text-[#1c1c1c] px-2 py-0.5 rounded text-[10px] font-bold border border-[#edeff1]">
+                 {listing.gender_preference === 'any' ? 'للجميع' : listing.gender_preference === 'male' ? 'شريك ذكر' : 'شريكة أنثى'}
+               </span>
              </div>
           </div>
 
-          {/* Content Area */}
-          <div className="p-3 flex-grow min-w-0">
-            
-            {/* Top Meta Info */}
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex flex-wrap items-center gap-2 text-xs text-[#787C7E]">
-                <span className="font-bold text-[#1c1c1c]">مُعلن</span>
-                
-                {isHighlyResponsive && (
-                  <span className="flex items-center gap-1 bg-[#d3f9d8] text-[#2b8a3e] px-1.5 py-0.5 rounded text-[10px] font-black tracking-wide border border-[#b2f2bb] shadow-sm animate-in fade-in">
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clipRule="evenodd" /></svg>
-                    يَرُد بسرعة
-                  </span>
-                )}
-
-                <span className="mx-0.5 hidden sm:inline">•</span>
-                <span>
-                  {listing.city} {listing.neighborhood && `- ${listing.neighborhood}`}
-                </span>
-              </div>
-              
-              {/* Report Flag (Visible on hover on desktop, always small on mobile) */}
-              <button 
-                onClick={handleReportClick}
-                className="text-[#878A8C] hover:text-[#FF4500] p-1 rounded hover:bg-[#FF4500]/10 transition-colors sm:opacity-0 group-hover:opacity-100"
-                title="تبليغ"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path></svg>
-              </button>
-            </div>
-
-            <div className="flex flex-col md:flex-row gap-4 mb-2">
-              
-              {/* Title & Tags */}
-              <div className="flex-grow">
-                <h3 className="text-[1.1rem] font-semibold text-[#1c1c1c] leading-snug mb-2 line-clamp-2">
-                  {listing.title}
-                </h3>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${isRoom ? 'bg-[#0079D3] text-white' : 'bg-[#FF4500] text-white'}`}>
-                    {listingTypeLabel(listing.type)}
-                  </span>
-                  <span className="bg-[#f0f0f0] text-[#1c1c1c] px-2 py-0.5 rounded-full text-xs font-medium">
-                    {listing.gender_preference === 'any' ? 'للجميع' : listing.gender_preference === 'male' ? 'ذكور' : 'إناث'}
-                  </span>
-
-                </div>
-                <p className="text-[#1c1c1c] text-sm hidden md:block line-clamp-3 leading-relaxed opacity-80">
-                  {listing.description}
-                </p>
-              </div>
-
-              {/* Thumbnail Image (Right aligned) */}
-              {firstPhoto && (
-                <div className="relative w-full md:w-[140px] h-[180px] md:h-[98px] rounded flex-shrink-0 bg-[#F0F2F5] border border-[#edeff1] overflow-hidden">
-                  <Image
-                    src={firstPhoto}
-                    alt={listing.title}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, 140px"
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Bottom Action Row */}
-            <div className="flex items-center gap-4 mt-2">
-              <div className="flex items-center gap-1.5 text-[#878A8C] hover:bg-[#E9ECEF] p-1.5 rounded transition-colors text-xs font-bold">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span>{formatPrice(listing.price)}</span>
-              </div>
-              
-              <div className="flex items-center gap-1.5 text-[#878A8C] hover:bg-[#E9ECEF] p-1.5 rounded transition-colors text-xs font-bold">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                <span>تواصل</span>
-              </div>
-            </div>
-            
+          {/* Details */}
+          <div className="p-3 pt-2 pb-4">
+            <Link href={`/listing/${listing.id}`} className="block group">
+              <h3 className="text-[1rem] font-bold text-[#1c1c1c] leading-tight mb-1 inline mr-1 group-hover:underline decoration-2 underline-offset-2">{listing.title}</h3>
+              <p className="text-sm text-[#1c1c1c] line-clamp-2 leading-relaxed">
+                 <span className="font-black text-[#1c1c1c]">{'@'}{listing.profiles?.name?.replace(/\s+/g, '').toLowerCase() || 'user'}</span> {listing.description}
+              </p>
+            </Link>
           </div>
-        </div>
-      </Link>
+      </div>
     </>
   )
 }
