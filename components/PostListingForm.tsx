@@ -43,7 +43,10 @@ export default function PostListingForm({ onSuccess, inModal = false }: PostList
   const [photos, setPhotos] = useState<File[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
   const [direction, setDirection] = useState<'forward' | 'back'>('forward')
+  const [newListingId, setNewListingId] = useState<string | null>(null)
+  const [newListingTitle, setNewListingTitle] = useState<string | null>(null)
 
   const {
     register,
@@ -132,12 +135,18 @@ export default function PostListingForm({ onSuccess, inModal = false }: PostList
       const resData = await res.json()
       if (!res.ok) throw new Error(resData.error || 'فشل في نشر الإعلان')
 
-      if (onSuccess) {
-        onSuccess()
-      } else {
-        router.push('/dashboard')
-        router.refresh()
-      }
+      setIsSuccess(true)
+      setNewListingTitle(resData.listing.title)
+      
+      // Short delay for the toast before redirect
+      setTimeout(() => {
+        if (onSuccess) {
+          onSuccess()
+        } else {
+          router.push('/dashboard')
+          router.refresh()
+        }
+      }, 3000)
     } catch (err: any) {
       setError(err.message)
       setStep(4) // send back to last step to show error
@@ -409,6 +418,33 @@ export default function PostListingForm({ onSuccess, inModal = false }: PostList
 
       </div>
       {/* ── end content ── */}
+
+      {isSuccess && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-40px)] max-w-[400px] animate-in slide-in-from-bottom-5 fade-in duration-500">
+           <div className="bg-[#1C1C1E] text-white p-5 rounded-[2rem] shadow-2xl border border-white/10">
+              <div className="flex items-center gap-4 mb-3">
+                 <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shrink-0">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                    </svg>
+                 </div>
+                 <div className="flex-1">
+                    <p className="text-sm font-black leading-tight">تم استلام الإعلان! </p>
+                    <p className="text-[10px] text-white/60 font-medium">سينشر فور موافقة الإدارة</p>
+                 </div>
+              </div>
+              
+              <a 
+                href={`https://wa.me/212704969534?text=${encodeURIComponent(`مرحباً، لقد قمت بنشر إعلان بعنوان "${newListingTitle}" وأرغب في تفعيله بسرعة.`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white py-3 rounded-2xl font-black text-xs transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-green-900/20"
+              >
+                 تفعيل سريع عبر واتساب
+              </a>
+           </div>
+        </div>
+      )}
 
       {/* ── Navigation footer ── */}
       <div className="px-6 py-4 border-t border-[rgba(60,60,67,0.08)] flex items-center gap-3 bg-white">
