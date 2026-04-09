@@ -53,5 +53,5 @@ export async function POST(
   if (!targetNumber) return NextResponse.json({ error: 'لم يتم العثور على رقم تواصل' }, { status: 404 })
 
   const url = buildWhatsAppUrl(targetNumber, listing.title)
-  return NextResponse.json({ url })
+  return NextResponse.json({ url, number: targetNumber })
 }

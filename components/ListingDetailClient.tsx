@@ -6,8 +6,9 @@ import { useRouter } from 'next/navigation'
 import WhatsAppButton from '@/components/WhatsAppButton'
 import ListingCard from '@/components/ListingCard'
 import ReportModal from '@/components/ReportModal'
-import { formatPrice, listingTypeLabel, genderPreferenceLabel, formatDate, getPlaceholderImage } from '@/lib/utils'
+import { formatPrice, listingTypeLabel, genderPreferenceLabel, formatDate } from '@/lib/utils'
 import { Listing } from '@/types'
+import { toast } from 'sonner'
 
 interface ListingDetailClientProps {
   initialListing: Listing
@@ -22,15 +23,12 @@ export default function ListingDetailClient({ initialListing, listingId }: Listi
   const [activePhoto, setActivePhoto] = useState(0)
   const [isSaved, setIsSaved] = useState(false)
   const [saveLoading, setSaveLoading] = useState(false)
-  const [shareFeedback, setShareFeedback] = useState('')
   const [reportModalOpen, setReportModalOpen] = useState(false)
   const [reported, setReported] = useState(false)
 
   useEffect(() => {
-    // Record history length so we know if we can go back
     historyLengthOnMount.current = window.history.length
 
-    // Fetch related listings
     fetch(`/api/listings?city=${listing.city}&type=${listing.type}`)
       .then(res => res.json())
       .then(relatedData => {
@@ -39,10 +37,8 @@ export default function ListingDetailClient({ initialListing, listingId }: Listi
       })
       .catch(() => {})
 
-    // Increment view count
     fetch(`/api/listings/${listingId}/view`, { method: 'POST' }).catch(() => {})
 
-    // Check save status via API (same source as ListingCard)
     fetch(`/api/listings/save?listingId=${listingId}`)
       .then(res => res.json())
       .then(data => setIsSaved(data.isSaved))
@@ -50,7 +46,6 @@ export default function ListingDetailClient({ initialListing, listingId }: Listi
   }, [listingId, listing.city, listing.type])
 
   const handleGoBack = () => {
-    // If user arrived via a shared link (no in-app history), go home instead of leaving the site
     if (window.history.length <= 2 || historyLengthOnMount.current <= 1) {
       router.push('/')
     } else {
@@ -69,28 +64,25 @@ export default function ListingDetailClient({ initialListing, listingId }: Listi
       if (res.ok) {
         const data = await res.json()
         setIsSaved(data.saved)
+        toast.success(data.saved ? 'تم الحفظ في المفضلة' : 'تمت الإزالة من المفضلة')
       }
-    } catch {}
-    finally { setSaveLoading(false) }
+    } catch {
+      toast.error('فشل في الحفظ')
+    } finally { setSaveLoading(false) }
   }
 
   const handleShare = async () => {
     const shareData = {
-      title: listing.title || 'moncoloc.ma - إعلان',
+      title: listing.title,
       text: 'اطلع على هذا الإعلان في موقع moncoloc.ma!',
       url: window.location.href
     }
 
     if (navigator.share) {
-      try {
-        await navigator.share(shareData)
-      } catch (err) {
-        // Silent fail for share
-      }
+      try { await navigator.share(shareData) } catch {}
     } else {
       navigator.clipboard.writeText(window.location.href)
-      setShareFeedback('تم نسخ الرابط!')
-      setTimeout(() => setShareFeedback(''), 3000)
+      toast.success('تم نسخ الرابط')
     }
   }
 
@@ -98,14 +90,8 @@ export default function ListingDetailClient({ initialListing, listingId }: Listi
   const isRoom = listing.type === 'room_available'
 
   return (
-    <div className="w-full max-w-[1000px] mx-auto py-6 px-4 relative">
+    <div className="w-full max-w-[1240px] mx-auto py-5 px-4">
       
-      {shareFeedback && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-[#1c1c1c] text-white px-4 py-2 rounded shadow-lg z-50 text-sm font-bold animate-pulse">
-           {shareFeedback}
-        </div>
-      )}
-
       {reportModalOpen && (
         <ReportModal
           listingId={listingId}
@@ -118,113 +104,181 @@ export default function ListingDetailClient({ initialListing, listingId }: Listi
         />
       )}
 
-      {reported && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-[#0079D3] text-white px-4 py-2 rounded shadow-lg z-50 text-sm font-bold">
-           شكراً لك! تم استلام بلاغك وسنقوم بمراجعته قريباً.
-        </div>
-      )}
-      
+      {/* Back to Home / Subreddit */}
       <div className="mb-4">
         <button 
           onClick={handleGoBack}
-          className="flex items-center gap-2 text-[#787C7E] hover:text-[#1c1c1c] text-sm font-bold transition-colors cursor-pointer"
+          className="flex items-center gap-2 text-[#787C7E] hover:text-[#1A1A1B] text-xs font-bold transition-all transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          العودة
+          العودة للرئيسية
         </button>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-6 items-start">
-        <div className="flex-grow w-full min-w-0 card-widget overflow-hidden">
-          <div className="p-4 border-b border-[#edeff1]">
-            <div className="flex items-center gap-2 mb-2 text-xs text-[#787C7E]">
-              <span className="font-bold text-[#1c1c1c]">{listing.profiles?.name || 'مستخدم غير معروف'}</span>
-              <span className="mx-1">•</span>
-              <span>نُشر في {formatDate(listing.created_at)}</span>
-              <span className="mx-1">•</span>
-              <span>مشاهدات: {listing.view_count > 0 ? listing.view_count : 'جديد'}</span>
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        
+        {/* ── MAIN POST AREA ── */}
+        <div className="flex-grow w-full min-w-0 flex flex-col gap-4">
+          <div className="card-widget relative">
+            
+            {/* Voting Sidebar (Visual) */}
+            <div className="absolute left-0 top-0 bottom-0 w-[40px] bg-[#f8f9fa] hidden md:flex flex-col items-center pt-5 gap-3 border-r border-[#edeff1]">
+              <button className="text-[#878A8C] hover:text-[#FF4500] p-1"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 15l7-7 7 7"></path></svg></button>
+              <span className="text-sm font-bold text-[#1A1A1B]">{Math.floor(listing.view_count / 10) + 1}</span>
+              <button className="text-[#878A8C] hover:text-[#7193ff] p-1"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7"></path></svg></button>
             </div>
-            <h1 className="text-xl font-bold text-[#1c1c1c] leading-snug mb-3">
-              {listing.title}
-            </h1>
-            <div className="flex flex-wrap gap-2">
-              <span className={`px-2 py-0.5 rounded text-xs font-bold ${isRoom ? 'bg-[#0079D3] text-white' : 'bg-[#FF4500] text-white'}`}>
-                {listingTypeLabel(listing.type)}
-              </span>
-              <span className="bg-[#f0f0f0] text-[#1c1c1c] px-2 py-0.5 rounded text-xs font-medium">
-                {genderPreferenceLabel(listing.gender_preference)}
-              </span>
-              <span className="bg-[#f0f0f0] text-[#1c1c1c] px-2 py-0.5 rounded text-xs font-medium flex items-center gap-1">
-                <svg className="w-3 h-3 text-[#787C7E]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                {listing.city} {listing.neighborhood && `- ${listing.neighborhood}`}
-              </span>
+
+            <div className="md:ml-[40px]">
+              {/* Header Meta */}
+              <div className="p-3 md:p-4 pb-0 flex items-center flex-wrap gap-2 text-[11px] text-[#787C7E]">
+                <div className="w-6 h-6 bg-[#edeff1] rounded-full flex items-center justify-center text-[10px] font-bold text-[#1A1A1B]">
+                  {listing.profiles?.name?.charAt(0) || 'U'}
+                </div>
+                <span className="font-bold text-[#1A1A1B]">u/{listing.profiles?.name || 'مستخدم_غير_معروف'}</span>
+                <span>•</span>
+                <span className="font-bold">{formatDate(listing.created_at)}</span>
+                <span>•</span>
+                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${isRoom ? 'bg-[#0079D3] text-white' : 'bg-[#FF4500] text-white'}`}>
+                  {listingTypeLabel(listing.type)}
+                </span>
+                <span className="flex-grow" />
+                <button 
+                  onClick={() => setReportModalOpen(true)}
+                  className="text-[#FF4500] hover:bg-[#FF4500]/10 px-2 py-1 rounded transition-colors"
+                >
+                  تبليغ
+                </button>
+              </div>
+
+              {/* Title & Body */}
+              <div className="p-3 md:p-5 md:pt-4">
+                <h1 className="text-xl md:text-2xl font-bold text-[#1A1A1B] leading-snug mb-5">
+                  {listing.title}
+                </h1>
+
+                {/* Photo Viewer */}
+                {photos.length > 0 && (
+                  <div className="bg-black rounded-lg overflow-hidden mb-6 relative group">
+                    <div className="relative h-[300px] md:h-[500px] w-full flex items-center justify-center">
+                      <Image src={photos[activePhoto]} alt={listing.title} fill className="object-contain" priority />
+                      {photos.length > 1 && (
+                        <>
+                          <button onClick={() => setActivePhoto((prev) => (prev > 0 ? prev - 1 : photos.length - 1))} className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 hover:bg-black/80 text-white rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg></button>
+                          <button onClick={() => setActivePhoto((prev) => (prev < photos.length - 1 ? prev + 1 : 0))} className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 hover:bg-black/80 text-white rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" /></svg></button>
+                        </>
+                      )}
+                    </div>
+                    {photos.length > 1 && (
+                      <div className="flex gap-2 p-2 overflow-x-auto bg-[#1A1A1B] border-t border-white/10">
+                        {photos.map((photo, i) => (
+                          <button key={i} onClick={() => setActivePhoto(i)} className={`relative w-14 h-14 flex-shrink-0 rounded border-2 transition-all ${activePhoto === i ? 'border-[#0079D3] scale-105' : 'border-transparent opacity-50 hover:opacity-100'}`}><Image src={photo} alt={`صورة ${i + 1}`} fill className="object-cover" /></button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="text-[#1A1A1B] whitespace-pre-wrap leading-relaxed text-[1rem] font-medium opacity-90 mb-8">
+                  {listing.description}
+                </div>
+
+                {/* Tags */}
+                <div className="flex flex-wrap gap-2 pt-4 border-t border-[#edeff1]">
+                   <span className="px-3 py-1 rounded-full bg-[#f6f7f8] text-[#878A8C] text-xs font-bold border border-[#edeff1]">
+                      سكن لـ: {genderPreferenceLabel(listing.gender_preference)}
+                   </span>
+                   {listing.tags?.map((tag, idx) => (
+                      <span key={idx} className="px-3 py-1 rounded-full bg-[#EAF2FF] text-[#0079D3] text-xs font-bold border border-[#0079D3]/10">
+                         {tag}
+                      </span>
+                   ))}
+                </div>
+              </div>
+
+              {/* Action Bar */}
+              <div className="p-2 border-t border-[#edeff1] flex items-center flex-wrap gap-2 text-[#878A8C] font-bold text-xs">
+                <button className="flex items-center gap-2 p-2 hover:bg-[#e8ecef] rounded transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                  <span>التعليقات</span>
+                </button>
+                <button onClick={handleShare} className="flex items-center gap-2 p-2 hover:bg-[#e8ecef] rounded transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+                  <span>مشاركة</span>
+                </button>
+                <button onClick={handleSave} disabled={saveLoading} className={`flex items-center gap-2 p-2 hover:bg-[#e8ecef] rounded transition-colors ${isSaved ? 'text-[#0079D3]' : ''}`}>
+                  <svg className="w-5 h-5" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+                  <span>{isSaved ? 'محفوظ' : 'حفظ'}</span>
+                </button>
+              </div>
             </div>
           </div>
 
-          {photos.length > 0 && (
-            <div className="bg-[#F8F9FA] border-b border-[#edeff1]">
-              <div className="relative h-[400px] w-full bg-[#1A1A1B] flex items-center justify-center">
-                <Image src={photos[activePhoto]} alt={listing.title} fill className="object-contain" sizes="(max-width: 1000px) 100vw, 1000px" priority />
-                {photos.length > 1 && (
-                  <>
-                    <button onClick={() => setActivePhoto((prev) => (prev > 0 ? prev - 1 : photos.length - 1))} className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/50 hover:bg-black/80 text-white rounded-full flex items-center justify-center transition-colors cursor-pointer"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg></button>
-                    <button onClick={() => setActivePhoto((prev) => (prev < photos.length - 1 ? prev + 1 : 0))} className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/50 hover:bg-black/80 text-white rounded-full flex items-center justify-center transition-colors cursor-pointer"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg></button>
-                  </>
-                )}
-              </div>
-              {photos.length > 1 && (
-                <div className="flex gap-2 p-3 overflow-x-auto bg-[#F8F9FA]">
-                  {photos.map((photo, i) => (
-                    <button key={i} onClick={() => setActivePhoto(i)} className={`relative w-16 h-16 flex-shrink-0 cursor-pointer rounded overflow-hidden transition-all border-2 ${activePhoto === i ? 'border-[#0079D3] opacity-100' : 'border-transparent opacity-60 hover:opacity-100'}`}><Image src={photo} alt={`صورة ${i + 1}`} fill className="object-cover" /></button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="p-4 md:p-6 pb-8">
-            <h2 className="text-lg font-bold text-[#1c1c1c] mb-3">التفاصيل</h2>
-            <div className="text-[#1c1c1c] whitespace-pre-wrap leading-relaxed text-sm">{listing.description}</div>
-            <div className="flex items-center gap-4 mt-8 pt-4 border-t border-[#edeff1] text-[#878A8C] text-xs font-bold">
-               <button onClick={handleShare} className="flex items-center gap-1.5 hover:bg-[#E9ECEF] px-2 py-1.5 rounded transition-colors cursor-pointer"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg> مشاركة</button>
-               <button onClick={handleSave} disabled={saveLoading} className={`flex items-center gap-1.5 px-2 py-1.5 rounded transition-colors cursor-pointer disabled:opacity-60 ${isSaved ? 'text-[#0079D3] bg-[#e7f3ff]' : 'hover:bg-[#E9ECEF]'}`}>
-                 <svg className="w-5 h-5" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
-                 {isSaved ? 'محفوظ' : 'حفظ'}
-               </button>
-               <div className="flex-grow" />
-               <button 
-                 onClick={() => setReportModalOpen(true)}
-                 className="flex items-center gap-1.5 hover:text-[#FF4500] hover:bg-[#FFF0E5] px-2 py-1.5 rounded transition-colors cursor-pointer group"
-               >
-                 <svg className="w-4 h-4 text-[#878A8C] group-hover:text-[#FF4500]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                 تبليغ
-               </button>
-            </div>
+          {/* Comments Placeholder */}
+          <div className="card-widget p-10 text-center flex flex-col items-center justify-center gap-3 border-dashed border-2 border-[#ccc]/50 bg-[#F6F7F8]/50">
+             <svg className="w-12 h-12 text-[#ccc]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+             <p className="text-sm font-bold text-[#878A8C]">لا توجد تعليقات بعد... كن أول من يضيف تعليقاً!</p>
           </div>
         </div>
 
-        <div className="w-full md:w-[312px] flex-shrink-0 flex flex-col gap-4">
-          <div className="card-widget p-4 sticky top-24">
-            <h3 className="text-xs font-bold text-[#787C7E] uppercase mb-4 tracking-wider">السعر المطلوب</h3>
-            <div className="text-3xl font-bold text-[#1c1c1c] mb-6 border-b border-[#edeff1] pb-4">
-               {formatPrice(listing.price)}
-            </div>
-            {/* WhatsApp button always shown — reveal API reads whatsapp_number from listing row (works for guests too) */}
-            <WhatsAppButton listingId={listingId} />
-            <div className="mt-4 pt-4 border-t border-[#edeff1] text-xs text-[#787C7E]">
-              <span className="font-bold block mb-1">تنبيه أمان:</span>
-              لا تقم بتحويل أي مبلغ مقدمًا. ابق معاملاتك المالية مرتبطة بمعاينة العقار.
+        {/* ── SIDEBAR ── */}
+        <div className="w-full lg:w-[312px] flex-shrink-0 flex flex-col gap-4 sticky top-[68px]">
+          
+          {/* About Widget */}
+          <div className="card-widget">
+            <div className="sidebar-widget-header">حول {listing.city}</div>
+            <div className="p-4">
+               <div className="flex items-center gap-4 mb-4">
+                  <div className="w-14 h-14 bg-[#0079D3] rounded-full flex items-center justify-center text-white text-2xl font-black shadow-lg">
+                    {listing.city.charAt(0)}
+                  </div>
+                  <div>
+                    <h4 className="font-black text-[#1A1A1B]">r/{listing.city}</h4>
+                    <p className="text-[10px] font-bold text-[#878A8C]">{listing.city}, المغرب</p>
+                  </div>
+               </div>
+               <p className="text-xs text-[#1A1A1B] leading-relaxed mb-4 font-medium">
+                  مجتمع المهتمين بالسكن والبحث عن أصدقاء السكن في مدينة {listing.city}. انضم إلينا لمعرفة آخر العروض.
+               </p>
+               <div className="flex border-t border-[#edeff1] pt-4 gap-6 mb-4">
+                  <div>
+                    <p className="text-sm font-black text-[#1A1A1B]">9.4k</p>
+                    <p className="text-[10px] font-bold text-[#878A8C]">عضو</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-[#1A1A1B]">128</p>
+                    <p className="text-[10px] font-bold text-[#878A8C]">متصل الآن</p>
+                  </div>
+               </div>
+               <button className="btn-primary w-full shadow-none" onClick={() => router.push(`/?city=${listing.city}`)}>تصفح المدينة</button>
             </div>
           </div>
+
+          {/* Pricing & Contact Widget */}
+          <div className="card-widget p-5 bg-[#F6F7F8] border-[#0079D3]/20">
+             <div className="text-[10px] font-black text-[#878A8C] uppercase mb-4 tracking-widest leading-none">السعر المطلوب</div>
+             <div className="text-3xl font-black text-[#1A1A1B] mb-5 pb-5 border-b border-[#edeff1]">
+                {formatPrice(listing.price)}
+                <span className="text-xs font-bold text-[#878A8C] tracking-normal mb-1">/ شهر</span>
+             </div>
+             <WhatsAppButton listingId={listingId} initialNumber={listing.whatsapp_number} />
+             <div className="mt-4 p-3 bg-white border border-[#edeff1] rounded-xl">
+                <span className="text-[10px] font-bold text-[#FF4500] uppercase block mb-1">💡 نصيحة أمان</span>
+                <p className="text-[10px] text-[#7C7C7C] leading-snug">
+                   لا تدفع أي مبلغ مالي قبل معاينة السكن والتأكد من هوية المعلن. الصدق والأمان أولويتنا.
+                </p>
+             </div>
+          </div>
+
         </div>
       </div>
-
+      
+      {/* Related Feed */}
       {relatedListings.length > 0 && (
-        <div className="mt-12 pt-12 border-t border-[#ccc]">
-          <h2 className="text-xl font-bold text-[#1c1c1c] mb-6">إعلانات مشابهة</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="mt-8 pt-8 border-t border-[#edeff1]">
+          <h3 className="text-sm font-bold text-[#878A8C] uppercase mb-6 tracking-widest">إعلانات مشابهة في {listing.city}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {relatedListings.map((rel) => (<ListingCard key={rel.id} listing={rel} />))}
           </div>
         </div>

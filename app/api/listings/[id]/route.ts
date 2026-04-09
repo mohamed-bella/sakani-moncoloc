@@ -77,10 +77,13 @@ export async function PATCH(
     // Status update is common for PATCH
     const { status } = body
     
+    // Users can only set to 'closed'. Anything else (like reopening) goes to 'pending'
+    const newStatus = status === 'closed' ? 'closed' : 'pending'
+
     // Check ownership is built into RLS, but we just verify it works
     const { data, error } = await supabase
       .from('listings')
-      .update({ status: status === 'closed' ? 'closed' : 'active' })
+      .update({ status: newStatus })
       .eq('id', id)
       .eq('user_id', user.id) // secondary check alongside RLS
       .select()

@@ -361,9 +361,9 @@ export default function AdminDashboard() {
         {!loading && activeTab === 'listings' && (
           <div className="space-y-6">
             <div className="flex items-center gap-2 mb-2">
-              {(['all', 'active', 'closed'] as const).map(f => (
+              {(['all', 'active', 'pending', 'closed'] as const).map(f => (
                 <button key={f} onClick={() => setListingFilter(f)} className={`px-5 py-2 text-xs font-bold rounded-full transition-all border ${listingFilter === f ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}>
-                  {f === 'all' ? 'جميع المناطق' : f === 'active' ? 'النشطة فقط' : 'المؤرشفة'}
+                  {f === 'all' ? 'جميع المناطق' : f === 'active' ? 'النشطة' : f === 'pending' ? 'بانتظار الموافقة' : 'المؤرشفة'}
                 </button>
               ))}
             </div>
@@ -373,7 +373,7 @@ export default function AdminDashboard() {
                 <div key={listing.id} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm transition-all hover:border-gray-300">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                      <span className={`w-3 h-3 rounded-full ${listing.status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                      <span className={`w-3 h-3 rounded-full ${listing.status === 'active' ? 'bg-green-500' : listing.status === 'pending' ? 'bg-yellow-500 animate-pulse' : 'bg-gray-400'}`}></span>
                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">{listing.city} — {listing.price} MAD</span>
                     </div>
                     {listing.locked_by_admin && (
@@ -384,6 +384,16 @@ export default function AdminDashboard() {
                   <div className="flex items-center justify-between border-t border-gray-50 pt-4">
                     <div className="text-xs font-bold text-gray-500">من: {listing.profiles?.name || 'غير معروف'}</div>
                     <div className="flex gap-1.5">
+                      {listing.status === 'pending' && (
+                        <button 
+                          onClick={() => listingAction(listing.id, 'approve')} 
+                          disabled={actionSubmitting[listing.id]}
+                          className="text-[10px] font-black text-white bg-blue-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"
+                        >
+                          {actionSubmitting[listing.id] && <div className="w-2.5 h-2.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
+                          موافقة
+                        </button>
+                      )}
                       {listing.status === 'active' ? (
                         <button 
                           onClick={() => listingAction(listing.id, 'close')} 
@@ -394,14 +404,16 @@ export default function AdminDashboard() {
                           إغلاق
                         </button>
                       ) : (
-                        <button 
-                          onClick={() => listingAction(listing.id, 'reopen')} 
-                          disabled={actionSubmitting[listing.id]}
-                          className="text-[10px] font-black text-white bg-green-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-green-700 disabled:opacity-50 flex items-center gap-1"
-                        >
-                          {actionSubmitting[listing.id] && <div className="w-2.5 h-2.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
-                          تنشيط
-                        </button>
+                        listing.status !== 'pending' && (
+                          <button 
+                            onClick={() => listingAction(listing.id, 'reopen')} 
+                            disabled={actionSubmitting[listing.id]}
+                            className="text-[10px] font-black text-white bg-green-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-green-700 disabled:opacity-50 flex items-center gap-1"
+                          >
+                            {actionSubmitting[listing.id] && <div className="w-2.5 h-2.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
+                            تنشيط
+                          </button>
+                        )
                       )}
                       <button 
                         onClick={() => listingAction(listing.id, 'delete')} 

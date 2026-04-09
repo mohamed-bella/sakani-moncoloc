@@ -61,7 +61,7 @@ export async function PATCH(request: Request) {
 
     if (action === 'close') {
       await supabase.from('listings').update({ status: 'closed', locked_by_admin: true }).eq('id', listingId)
-    } else if (action === 'reopen') {
+    } else if (action === 'reopen' || action === 'approve') {
       await supabase.from('listings').update({ status: 'active', locked_by_admin: false }).eq('id', listingId)
     } else if (action === 'delete') {
       await supabase.from('listings').delete().eq('id', listingId)

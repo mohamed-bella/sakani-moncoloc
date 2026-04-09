@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -41,10 +41,11 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const path = request.nextUrl.pathname
-  console.log(`[PROXY DEBUG] Path: ${path}, User: ${user ? 'Logged' : 'Guest'}`)
+  console.log(`[MIDDLEWARE DEBUG] Path: ${path}, User: ${user ? 'Logged' : 'Guest'}`)
 
   // Public pages that anyone can see
   const isPublicPage = 
+    path === '/bella' ||
     path.startsWith('/post') ||
     path === '/' || 
     path.startsWith('/listing') || 
@@ -54,18 +55,24 @@ export async function proxy(request: NextRequest) {
     path.startsWith('/api')
 
   // Auth pages (where logged-in users shouldn't go back to)
-  const isAuthPage = path.startsWith('/auth')
+  const isAuthPage = path === '/bella'
 
   // 1. If not logged in and trying to access a PRIVATE page, redirect to login
   if (!user && !isPublicPage && !isAuthPage) {
     const url = request.nextUrl.clone()
-    url.pathname = '/auth/login'
+    url.pathname = '/bella'
     url.searchParams.set('redirectTo', path)
     return NextResponse.redirect(url)
   }
 
   // 2. If logged in and trying to access AUTH pages, redirect to dashboard
   if (user && isAuthPage) {
+    const { data: adminResult } = await supabase.rpc('is_admin')
+    if (adminResult) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/admin'
+      return NextResponse.redirect(url)
+    }
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
@@ -75,7 +82,7 @@ export async function proxy(request: NextRequest) {
   if (path.startsWith('/admin')) {
     if (!user) {
       const url = request.nextUrl.clone()
-      url.pathname = '/auth/login'
+      url.pathname = '/bella'
       return NextResponse.redirect(url)
     }
 

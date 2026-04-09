@@ -47,13 +47,13 @@ export default function CityGrid({ onCitySelect, activeCity, onNeighborhoodSelec
   }, [])
 
   return (
-    <div className="mb-2">
-      <div className="flex items-center justify-between mb-3 px-1">
-        <h2 className="text-sm font-bold text-[#1c1c1c]">استكشف حسب المدينة</h2>
+    <div className="mb-4">
+      <div className="flex items-center justify-between mb-4 px-1">
+        <h2 className="text-[11px] font-black text-[#878A8C] tracking-widest uppercase">تجمعات المدن المستحسنة</h2>
         {activeCity !== 'all' && (
           <button 
             onClick={() => onCitySelect('all')}
-            className="text-xs font-bold text-[#0079D3] hover:underline"
+            className="text-[11px] font-bold text-[#0079D3] hover:underline"
           >
             عرض الكل
           </button>
@@ -63,11 +63,11 @@ export default function CityGrid({ onCitySelect, activeCity, onNeighborhoodSelec
       {loading ? (
         <div className="flex overflow-hidden gap-3 px-1">
           {[1,2,3,4,5].map(i => (
-            <div key={i} className="w-[100px] md:w-[120px] h-[100px] flex-shrink-0 bg-[#f0f2f5] animate-pulse rounded-xl" />
+            <div key={i} className="w-[120px] h-[48px] flex-shrink-0 bg-[#f6f7f8] animate-pulse rounded-full border border-[#edeff1]" />
           ))}
         </div>
       ) : (
-        <div className="flex overflow-x-auto pb-4 pt-1 px-1 -mx-1 snap-x scroll-smooth gap-3 md:grid md:grid-cols-5 md:overflow-x-visible md:pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="flex overflow-x-auto pb-4 px-1 -mx-1 snap-x scroll-smooth gap-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {CITIES.map((city) => {
             const count = counts[city] || 0;
             const isActive = activeCity === city;
@@ -77,50 +77,42 @@ export default function CityGrid({ onCitySelect, activeCity, onNeighborhoodSelec
               <button
                 key={city}
                 onClick={() => onCitySelect(isActive ? 'all' : city)}
-                className={`cursor-pointer flex-shrink-0 snap-start relative group overflow-hidden transition-all duration-200 w-[100px] md:w-auto rounded-2xl py-3 px-2 flex flex-col items-center justify-center gap-1.5 ${
+                className={`cursor-pointer flex-shrink-0 snap-start relative group transition-all duration-200 py-2 px-4 flex items-center gap-3 rounded-full border ${
                   isActive 
-                    ? 'bg-[#0071E3] shadow-[0_4px_16px_rgba(0,113,227,0.30)] transform md:-translate-y-1' 
-                    : 'bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.10)] hover:-translate-y-0.5'
+                    ? 'bg-[#0079D3] border-[#0079D3] text-white' 
+                    : 'bg-white border-[#edeff1] hover:border-[#878A8C] text-[#1c1c1c]'
                 }`}
               >
-                {/* Emoji Icon */}
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-[1.4rem] transition-transform group-hover:scale-110 ${
-                  isActive ? 'bg-white/20' : 'bg-[#F2F2F7]'
+                {/* Reddit-style Community Icon */}
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-black shadow-sm ${
+                  isActive ? 'bg-white text-[#0079D3]' : 'bg-[#0079D3] text-white'
                 }`}>
-                  {meta.emoji}
+                  {city.charAt(0)}
                 </div>
                 
-                <span className={`text-[11px] font-semibold z-10 truncate w-full text-center leading-tight ${
-                  isActive ? 'text-white' : 'text-[#1C1C1E]'
-                }`}>
-                  {city}
-                </span>
-
-                {/* Listing count badge */}
-                {count > 0 && (
-                  <div className={`absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none ${
-                    isActive 
-                      ? 'bg-white/25 text-white' 
-                      : 'bg-[#0071E3]/10 text-[#0071E3]'
-                  }`}>
-                    {count}
-                  </div>
-                )}
+                <div className="flex flex-col items-start leading-none gap-0.5">
+                   <span className={`text-[12px] font-bold ${isActive ? 'text-white' : 'text-[#1c1c1c]'}`}>
+                      r/{city}
+                   </span>
+                   <span className={`text-[9px] font-black opacity-60 ${isActive ? 'text-white' : 'text-[#878A8C]'}`}>
+                      {count} منشور
+                   </span>
+                </div>
               </button>
             )
           })}
         </div>
       )}
 
-      {/* Secondary Neighborhood Row */}
+      {/* Secondary Neighborhood Row (Integrated as Subreddits) */}
       {activeCity !== 'all' && dynamicNeighborhoods[activeCity] && dynamicNeighborhoods[activeCity].length > 0 && (
-        <div className="mt-3 flex overflow-x-auto gap-2 px-1 pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="mt-2 flex overflow-x-auto gap-2 px-1 pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <button
             onClick={() => onNeighborhoodSelect('all')}
-            className={`cursor-pointer flex-shrink-0 text-[10px] font-bold px-3 py-1.5 rounded-full transition-colors ${
+            className={`cursor-pointer flex-shrink-0 text-[10px] font-bold px-4 py-1.5 rounded-md border transition-all ${
               activeNeighborhood === 'all' 
-                ? 'bg-[#1c1c1c] text-white' 
-                : 'bg-[#f0f2f5] text-[#787C7E] hover:bg-[#e4e6e9]'
+                ? 'bg-[#1A1A1B] text-white border-[#1A1A1B]' 
+                : 'bg-[#f6f7f8] text-[#878A8C] border-[#edeff1] hover:bg-[#e8ecef]'
             }`}
           >
             كل الأحياء
@@ -129,13 +121,13 @@ export default function CityGrid({ onCitySelect, activeCity, onNeighborhoodSelec
             <button
               key={neighborhood}
               onClick={() => onNeighborhoodSelect(neighborhood)}
-              className={`cursor-pointer flex-shrink-0 text-[10px] font-bold px-3 py-1.5 rounded-full transition-colors ${
+              className={`cursor-pointer flex-shrink-0 text-[10px] font-bold px-4 py-1.5 rounded-md border transition-all ${
                 activeNeighborhood === neighborhood 
-                  ? 'bg-[#0079D3] text-white' 
-                  : 'bg-[#f0f2f5] text-[#787C7E] hover:bg-[#e4e6e9]'
+                  ? 'bg-[#0079D3] text-white border-[#0079D3]' 
+                  : 'bg-[#f6f7f8] text-[#878A8C] border-[#edeff1] hover:bg-[#e8ecef]'
               }`}
             >
-              {neighborhood}
+              u/{neighborhood.replace(/\s+/g, '_')}
             </button>
           ))}
         </div>

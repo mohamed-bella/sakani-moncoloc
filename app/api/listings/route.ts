@@ -149,7 +149,7 @@ export async function POST(request: Request) {
         user_id: posterId,
         ...validData,
         photos,
-        status: 'active',
+        status: 'pending',
       })
       .select()
       .single()

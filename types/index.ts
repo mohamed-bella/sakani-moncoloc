@@ -1,6 +1,6 @@
 export type ListingType = 'room_available' | 'looking_for_roommate'
 export type GenderPreference = 'any' | 'male' | 'female'
-export type ListingStatus = 'active' | 'closed'
+export type ListingStatus = 'active' | 'closed' | 'pending'
 
 export interface Profile {
   id: string
@@ -29,6 +29,7 @@ export interface Listing {
   updated_at: string
   bumped_at?: string
   tags?: string[]
+  whatsapp_number?: string
   // Joined from profiles (used on detail page)
   profiles?: Profile
 }

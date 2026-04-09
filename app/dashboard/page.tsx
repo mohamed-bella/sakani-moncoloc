@@ -13,7 +13,7 @@ export default async function DashboardPage(props: {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/auth/login')
+    redirect('/')
   }
 
   // Fetch user's listings
@@ -98,9 +98,11 @@ export default async function DashboardPage(props: {
                       {listing.title}
                     </h3>
                     <span className={`flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${
-                      listing.status === 'active' ? 'bg-[#e7f3ff] text-[#0079D3]' : 'bg-[#f6f7f8] text-[#787C7E]'
+                      listing.status === 'active' ? 'bg-[#e7f3ff] text-[#0079D3]' : 
+                      listing.status === 'pending' ? 'bg-yellow-50 text-yellow-600 border border-yellow-200' :
+                      'bg-[#f6f7f8] text-[#787C7E]'
                     }`}>
-                      {listing.status === 'active' ? 'نشط' : 'مغلق'}
+                      {listing.status === 'active' ? 'نشط' : listing.status === 'pending' ? 'بانتظار الموافقة' : 'مغلق'}
                     </span>
                   </div>
                   

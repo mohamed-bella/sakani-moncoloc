@@ -13,88 +13,108 @@ import ImageUploader from '@/components/ImageUploader'
 
 interface PostListingFormProps {
   onSuccess?: () => void
+  /** When true the component manages its own height (inside modal) */
+  inModal?: boolean
 }
 
-export default function PostListingForm({ onSuccess }: PostListingFormProps) {
+const TOTAL_STEPS = 4
+
+// ─── Step indicators ─────────────────────────────────────────────────────────
+function StepBar({ current, total }: { current: number; total: number }) {
+  return (
+    <div className="flex items-center gap-1.5 px-6 pt-4 pb-2">
+      {Array.from({ length: total }).map((_, i) => (
+        <div
+          key={i}
+          className="h-[3px] flex-1 rounded-full transition-all duration-400"
+          style={{
+            background: i < current ? '#0071E3' : 'rgba(60,60,67,0.12)',
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+export default function PostListingForm({ onSuccess, inModal = false }: PostListingFormProps) {
   const router = useRouter()
   const supabase = createClient()
+  const [step, setStep] = useState(1)
   const [photos, setPhotos] = useState<File[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [direction, setDirection] = useState<'forward' | 'back'>('forward')
 
   const {
     register,
     handleSubmit,
     watch,
     setValue,
+    trigger,
     formState: { errors },
   } = useForm<ListingFormData>({
     resolver: zodResolver(ListingSchema),
     defaultValues: {
       type: 'room_available',
-      city: 'Agadir',
+      city: 'Casablanca',
       gender_preference: 'any',
       tags: [],
     },
   })
 
   const listingType = watch('type')
+  const selectedCity = watch('city')
+  const selectedGender = watch('gender_preference')
+  const selectedTags = watch('tags') || []
+
+  const descriptionValue = watch('description') || ''
+  const isDescriptionValid = descriptionValue.length >= 20
 
   useEffect(() => {
     async function loadUserWhatsapp() {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const { data } = await supabase.from('profiles').select('whatsapp').eq('id', user.id).single()
-        if (data?.whatsapp) {
-          setValue('whatsapp_number', data.whatsapp)
-        }
+        if (data?.whatsapp) setValue('whatsapp_number', data.whatsapp)
       }
     }
     loadUserWhatsapp()
   }, [supabase, setValue])
 
+  const goNext = async () => {
+    // Validate fields for the current step before advancing
+    let valid = true
+    if (step === 2) {
+      valid = await trigger(['city', 'price', 'whatsapp_number'])
+    } else if (step === 4) {
+      valid = await trigger(['description'])
+    }
+    if (!valid) return
+    setDirection('forward')
+    setStep(s => Math.min(s + 1, TOTAL_STEPS))
+  }
+
+  const goBack = () => {
+    setDirection('back')
+    setStep(s => Math.max(s - 1, 1))
+  }
+
   const onSubmit = async (data: ListingFormData) => {
     setIsSubmitting(true)
     setError(null)
-    
     try {
       const { data: { user } } = await supabase.auth.getUser()
-
       const uploadedUrls: string[] = []
-      
+
       if (photos.length > 0) {
         const listingId = uuidv4()
-        
-        // Compression Options
-        const options = {
-          maxSizeMB: 1,           // Max size 1MB
-          maxWidthOrHeight: 1920, // Max width/height 1920px
-          useWebWorker: true,
-          initialQuality: 0.8     // High quality compression
-        }
-
+        const options = { maxSizeMB: 1, maxWidthOrHeight: 1920, useWebWorker: true, initialQuality: 0.8 }
         for (const file of photos) {
-          // Compress image
-          const compressedBlob = await imageCompression(file, options)
-          
-          const ext = 'webp' // Convert to WEBP for better performance
-          const fileName = `${uuidv4()}.${ext}`
-          const creatorFolder = user ? user.id : 'guest_uploads'
-          const filePath = `${creatorFolder}/${listingId}/${fileName}`
-          
-          const { error: uploadError } = await supabase.storage
-            .from('listing-photos')
-            .upload(filePath, compressedBlob, {
-              contentType: 'image/webp',
-              upsert: true
-            })
-            
+          const compressed = await imageCompression(file, options)
+          const filePath = `${user ? user.id : 'guest_uploads'}/${listingId}/${uuidv4()}.webp`
+          const { error: uploadError } = await supabase.storage.from('listing-photos').upload(filePath, compressed, { contentType: 'image/webp', upsert: true })
           if (uploadError) throw new Error('فشل في رفع الصور')
-          
-          const { data: { publicUrl } } = supabase.storage
-            .from('listing-photos')
-            .getPublicUrl(filePath)
-            
+          const { data: { publicUrl } } = supabase.storage.from('listing-photos').getPublicUrl(filePath)
           uploadedUrls.push(publicUrl)
         }
       }
@@ -120,156 +140,318 @@ export default function PostListingForm({ onSuccess }: PostListingFormProps) {
       }
     } catch (err: any) {
       setError(err.message)
+      setStep(4) // send back to last step to show error
     } finally {
       setIsSubmitting(false)
     }
   }
 
+  // ─── Step labels ─────────────────────────────────────────────────────────
+  const stepLabel = (
+    <span>
+      {['نوع الإعلان', 'الموقع والسعر', 'التفضيلات', 'الوصف والصور'][step - 1]}
+      {step === 1 && <span className="text-[#FF3B30] mr-1">*</span>}
+    </span>
+  )
+
+  // ─── Wrapper height strategy ──────────────────────────────────────────────
+  const wrapperClass = inModal
+    ? 'flex flex-col h-full'
+    : 'flex flex-col min-h-[520px]'
+
   return (
-    <div className="flex flex-col h-full bg-white relative">
-      {error && (
-        <div className="bg-[#FFF0E5] text-[#FF4500] p-4 mx-6 mt-6 rounded font-bold border border-[#FF4500]/20 text-center text-sm shadow-sm">
-          {error}
-        </div>
-      )}
+    <form onSubmit={handleSubmit(onSubmit)} className={wrapperClass}>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex-grow flex flex-col px-6 py-6 pb-28 sm:pb-6 overflow-y-auto w-full max-w-lg mx-auto space-y-10">
-        
-        {/* SECTION 1: Type Selection */}
+      {/* ── Progress bar ── */}
+      <StepBar current={step} total={TOTAL_STEPS} />
+
+      {/* ── Step counter + label ── */}
+      <div className="px-6 pb-4 flex items-baseline justify-between">
         <div>
-          <h2 className="text-xl font-black text-[#1c1c1c] text-center mb-6">ما هو الغرض من الإعلان؟</h2>
-          <div className="grid gap-4">
-            <label className={`relative flex flex-col items-center justify-center p-6 cursor-pointer rounded-xl border-2 transition-all ${listingType === 'room_available' ? 'border-[#0079D3] bg-[#f0f7ff] text-[#0079D3] shadow-md scale-[1.02]' : 'border-[#edeff1] hover:border-[#0079D3]/50 text-[#787C7E]'}`}>
-              <input type="radio" value="room_available" {...register('type')} className="sr-only" />
-              <svg className="w-10 h-10 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-              <span className="text-lg font-black">لدي غرفة للإيجار</span>
-              <span className="text-xs text-center mt-2 opacity-80">أملك شقة أو غرفة وأبحث عن من يشاركني إياها</span>
-            </label>
-
-            <label className={`relative flex flex-col items-center justify-center p-6 cursor-pointer rounded-xl border-2 transition-all ${listingType === 'looking_for_roommate' ? 'border-[#0079D3] bg-[#f0f7ff] text-[#0079D3] shadow-md scale-[1.02]' : 'border-[#edeff1] hover:border-[#0079D3]/50 text-[#787C7E]'}`}>
-              <input type="radio" value="looking_for_roommate" {...register('type')} className="sr-only" />
-              <svg className="w-10 h-10 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-              <span className="text-lg font-black">أبحث عن غرفة / شريك</span>
-              <span className="text-xs text-center mt-2 opacity-80">أريد الانتقال وأبحث عن شخص لديه سكن أو يريد البحث معي</span>
-            </label>
-          </div>
+          <p className="text-[11px] font-medium text-[#8E8E93] mb-0.5">
+            الخطوة {step} من {TOTAL_STEPS}
+          </p>
+          <h2 className="text-[1.35rem] font-bold text-[#1C1C1E] tracking-tight">{stepLabel}</h2>
         </div>
+      </div>
 
-        <hr className="border-[#f0f2f5]" />
+      {/* ── Step content ─────────────────────────────────────────────────── */}
+      <div className="flex-1 overflow-y-auto px-6 pb-4">
 
-        {/* SECTION 2: Location */}
-        <div className="space-y-6">
-          <h2 className="text-xl font-black text-[#1c1c1c] text-center mb-6">الموقع والتفاصيل</h2>
-          <div>
-            <label className="block text-sm font-bold text-[#1c1c1c] mb-2 text-right">المدينة <span className="text-[#FF4500]">*</span></label>
-            <select {...register('city')} className="w-full px-4 py-3 bg-[#f6f7f8] border-2 border-[#edeff1] rounded-xl text-base focus:outline-none focus:border-[#0079D3] focus:bg-white cursor-pointer transition-colors appearance-none text-right font-medium" dir="rtl" disabled={isSubmitting}>
-              {CITIES.map((city) => <option key={city} value={city}>{city}</option>)}
-            </select>
-            {errors.city && <p className="text-[#FF4500] text-xs mt-1 text-right font-bold">{errors.city.message}</p>}
+        {/* ════ STEP 1 — TYPE ════ */}
+        {step === 1 && (
+          <div className="flex flex-col gap-4 pt-1">
+            {[
+              {
+                value: 'room_available',
+                emoji: '🏠',
+                title: 'لدي غرفة أو شقة',
+                sub: 'أملك مكاناً وأبحث عن شريك يقاسمني السكن.',
+              },
+              {
+                value: 'looking_for_roommate',
+                emoji: '🔍',
+                title: 'أبحث عن غرفة أو شريك',
+                sub: 'أريد الانتقال وأبحث عن سكن أو شخص يريد البحث معي.',
+              },
+            ].map(opt => (
+              <label
+                key={opt.value}
+                className={`relative flex items-start gap-5 p-5 rounded-2xl border-2 cursor-pointer transition-all select-none ${
+                  listingType === opt.value
+                    ? 'border-[#0071E3] bg-[#EAF2FF]'
+                    : 'border-[rgba(60,60,67,0.12)] bg-white hover:border-[rgba(60,60,67,0.25)]'
+                }`}
+              >
+                <input type="radio" value={opt.value} {...register('type')} className="sr-only" />
+                <span className="text-3xl mt-0.5 flex-shrink-0">{opt.emoji}</span>
+                <div className="flex-1">
+                  <p className={`text-base font-semibold mb-1 leading-tight ${listingType === opt.value ? 'text-[#0071E3]' : 'text-[#1C1C1E]'}`}>
+                    {opt.title}
+                  </p>
+                  <p className="text-sm text-[#8E8E93] leading-snug">{opt.sub}</p>
+                </div>
+                {/* Check indicator */}
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${
+                  listingType === opt.value ? 'border-[#0071E3] bg-[#0071E3]' : 'border-[rgba(60,60,67,0.2)] bg-white'
+                }`}>
+                  {listingType === opt.value && (
+                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 12 12">
+                      <path d="M10 3L5 8.5 2 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                    </svg>
+                  )}
+                </div>
+              </label>
+            ))}
           </div>
-          <div>
-            <label className="block text-sm font-bold text-[#1c1c1c] mb-2 text-right">الحي (اختياري)</label>
-            <input type="text" {...register('neighborhood')} className="w-full px-4 py-3 bg-[#f6f7f8] border-2 border-[#edeff1] rounded-xl text-base focus:outline-none focus:border-[#0079D3] focus:bg-white transition-colors text-right font-medium placeholder:text-[#878A8C]" dir="rtl" placeholder="مثال: حي المعاريف" disabled={isSubmitting} />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-bold text-[#1c1c1c] mb-2 text-right">السعر المطلوب (درهم/شهر) <span className="text-[#FF4500]">*</span></label>
-            <div className="relative">
-              <input type="number" {...register('price', { valueAsNumber: true })} className="w-full px-4 py-4 bg-[#f6f7f8] border-2 border-[#edeff1] rounded-xl text-lg font-black focus:outline-none focus:border-[#0079D3] focus:bg-white transition-colors text-center" dir="rtl" placeholder="0" disabled={isSubmitting} />
-              <span className="absolute left-5 top-1/2 -translate-y-1/2 text-[#787C7E] font-bold">د.م</span>
-            </div>
-            {errors.price && <p className="text-[#FF4500] text-xs mt-2 text-center font-bold">{errors.price.message}</p>}
-          </div>
+        )}
 
-          <div>
-            <label className="block text-sm font-bold text-[#1c1c1c] mb-2 text-right">رقم الواتساب للتواصل بخصوص هذا الإعلان <span className="text-[#FF4500]">*</span></label>
-            <input type="tel" {...register('whatsapp_number')} className="w-full px-4 py-3 bg-[#f6f7f8] border-2 border-[#edeff1] rounded-xl text-base focus:outline-none focus:border-[#0079D3] focus:bg-white transition-colors text-left font-medium placeholder:text-[#878A8C]" dir="ltr" placeholder="مثال: 0612345678" disabled={isSubmitting} />
-            {errors.whatsapp_number && <p className="text-[#FF4500] text-xs mt-1 text-right font-bold">{errors.whatsapp_number.message}</p>}
-          </div>
+        {/* ════ STEP 2 — LOCATION + PRICE + WHATSAPP ════ */}
+        {step === 2 && (
+          <div className="flex flex-col gap-5 pt-1">
 
-          <div>
-            <label className="block text-sm font-bold text-[#1c1c1c] mb-3 text-right">من تفضل كشريك سكن؟ <span className="text-[#FF4500]">*</span></label>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { value: 'any', label: 'الجميع', icon: 'للكل' },
-                { value: 'male', label: 'ذكور', icon: '👦' },
-                { value: 'female', label: 'إناث', icon: '👩' }
-              ].map((opt) => (
-                 <label key={opt.value} className={`relative flex flex-col items-center justify-center p-4 cursor-pointer rounded-xl border-2 transition-all ${watch('gender_preference') === opt.value ? 'border-[#0079D3] bg-[#f0f7ff] text-[#0079D3] font-black shadow-md scale-105' : 'border-[#edeff1] text-[#787C7E] hover:border-[#0079D3]/30 hover:bg-[#f6f7f8]'}`}>
-                   <input type="radio" value={opt.value} {...register('gender_preference')} className="sr-only" />
-                   <span className="text-2xl mb-2">{opt.icon}</span>
-                   <span className="text-xs font-bold">{opt.label}</span>
-                 </label>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <hr className="border-[#f0f2f5]" />
-
-        {/* SECTION 3: Tags & Lifestyle */}
-        <div className="space-y-6">
-          <h2 className="text-xl font-black text-[#1c1c1c] text-center mb-2">نمط الحياة والمميزات</h2>
-          <p className="text-[#787C7E] text-xs text-center mb-4 font-bold">حدد ما يناسبك لزيادة فرصة التوافق</p>
-          <div className="flex flex-wrap gap-2 justify-end" dir="rtl">
-            {LIFESTYLE_TAGS.map(tag => {
-              const currentTags = watch('tags') || [];
-              const isSelected = currentTags.includes(tag);
-              return (
-                <label 
-                  key={tag} 
-                  className={`cursor-pointer px-3 py-1.5 rounded-full border-2 text-xs font-bold transition-all ${
-                    isSelected 
-                      ? 'bg-[#0079D3] border-[#0079D3] text-white shadow-sm scale-105' 
-                      : 'bg-white border-[#edeff1] text-[#787C7E] hover:border-[#0079D3]/50 hover:bg-[#f6f7f8]'
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    value={tag}
-                    {...register('tags')}
-                    className="sr-only"
-                  />
-                  {tag}
-                </label>
-              );
-            })}
-          </div>
-        </div>
-
-        <hr className="border-[#f0f2f5]" />
-
-        {/* SECTION 4: Story & Photos */}
-        <div className="space-y-6">
-          <h2 className="text-xl font-black text-[#1c1c1c] text-center mb-6">الوصف والصور</h2>
-
-          <div>
-            <label className="block text-sm font-bold text-[#1c1c1c] mb-2 text-right">وصف تفصيلي <span className="text-[#FF4500]">*</span></label>
-            <textarea {...register('description')} rows={4} className="w-full px-4 py-3 bg-[#f6f7f8] border-2 border-[#edeff1] rounded-xl text-sm font-medium focus:outline-none focus:border-[#0079D3] focus:bg-white transition-colors resize-none text-right placeholder:leading-relaxed" dir="rtl" placeholder={`عن ماذا تبحث؟ ما هي الميزات؟\n- التجهيزات\n- نمط الحياة المفضل\n- أي تفاصيل إضافية...`} disabled={isSubmitting} />
-            {errors.description && <p className="text-[#FF4500] text-xs mt-1 text-right font-bold">{errors.description.message}</p>}
-          </div>
-
-          {listingType === 'room_available' && (
+            {/* City */}
             <div>
-              <label className="block text-sm font-bold text-[#1c1c1c] mb-2 text-right">الصور (اختياري، لكن ينصح بها)</label>
-              <div className="bg-[#f6f7f8] p-4 rounded-xl border-2 border-dashed border-[#ccc] transition-colors focus-within:border-[#0079D3] focus-within:bg-[#f0f7ff]">
-                 <ImageUploader files={photos} onChange={setPhotos} maxFiles={5} />
+              <label className="block text-sm font-medium text-[#1C1C1E] mb-2">
+                المدينة <span className="text-[#FF3B30]">*</span>
+              </label>
+              <div className="relative">
+                <select
+                  {...register('city')}
+                  dir="rtl"
+                  className="w-full appearance-none bg-[#F2F2F7] border-2 border-transparent rounded-xl px-4 py-3.5 text-[#1C1C1E] font-medium text-sm focus:outline-none focus:border-[#0071E3] focus:bg-white transition-all cursor-pointer"
+                >
+                  {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
               </div>
             </div>
-          )}
-          
-          <p className="text-[10px] text-[#787C7E] text-center mt-4 leading-relaxed bg-[#f6f7f8] p-3 rounded font-medium">
-            بمجرد النشر، أنت توافق على شروط سياسة المحتوى الخاصة بسكني. نوصي بتجنب نشر أرقام الهواتف أو معلومات التواصل في الوصف للأمان.
-          </p>
-        </div>
 
-        {/* Floating Navigation Footer */}
-        <div className="fixed sm:sticky bottom-[64px] sm:bottom-0 left-0 right-0 p-4 sm:p-0 sm:pt-6 bg-white sm:bg-transparent border-t border-[#edeff1] sm:border-t-0 mt-auto flex gap-3 z-20 shadow-[0_-4px_6px_-1px_rgb(0,0,0,0.05)] sm:shadow-none pb-safe">
-          <button type="submit" disabled={isSubmitting} className="flex-grow btn-primary py-3.5 text-base shadow-sm">
-            {isSubmitting ? 'جاري النشر...' : 'أضف الإعلان الآن'}
+            {/* Neighborhood */}
+            <div>
+              <label className="block text-sm font-medium text-[#1C1C1E] mb-2">الحي <span className="text-[#8E8E93] font-normal">(اختياري)</span></label>
+              <input
+                type="text"
+                {...register('neighborhood')}
+                dir="rtl"
+                placeholder="مثال: المعاريف، أكدال..."
+                className="w-full bg-[#F2F2F7] border-2 border-transparent rounded-xl px-4 py-3.5 text-sm font-medium text-[#1C1C1E] placeholder:text-[#AEAEB2] focus:outline-none focus:border-[#0071E3] focus:bg-white transition-all"
+              />
+            </div>
+
+            {/* Price */}
+            <div>
+              <label className="block text-sm font-medium text-[#1C1C1E] mb-2">
+                السعر الشهري <span className="text-[#FF3B30]">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  {...register('price', { valueAsNumber: true })}
+                  placeholder="2500"
+                  className="w-full bg-[#F2F2F7] border-2 border-transparent rounded-xl px-4 py-3.5 text-[1.1rem] font-semibold text-[#1C1C1E] text-center placeholder:text-[#AEAEB2] focus:outline-none focus:border-[#0071E3] focus:bg-white transition-all"
+                />
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#8E8E93]">د.م</span>
+              </div>
+              {errors.price && <p className="text-[#FF3B30] text-xs mt-1.5 font-medium">{errors.price.message}</p>}
+            </div>
+
+            {/* WhatsApp */}
+            <div>
+              <label className="block text-sm font-medium text-[#1C1C1E] mb-2">
+                رقم الواتساب للتواصل <span className="text-[#FF3B30]">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="tel"
+                  {...register('whatsapp_number')}
+                  dir="ltr"
+                  placeholder="0612345678"
+                  className="w-full bg-[#F2F2F7] border-2 border-transparent rounded-xl px-4 py-3.5 text-sm font-medium text-[#1C1C1E] placeholder:text-[#AEAEB2] focus:outline-none focus:border-[#0071E3] focus:bg-white transition-all"
+                />
+              </div>
+              {errors.whatsapp_number && <p className="text-[#FF3B30] text-xs mt-1.5 font-medium">{errors.whatsapp_number.message}</p>}
+            </div>
+
+          </div>
+        )}
+
+        {/* ════ STEP 3 — PREFERENCES ════ */}
+        {step === 3 && (
+          <div className="flex flex-col gap-6 pt-1">
+
+            {/* Gender preference */}
+            <div>
+              <p className="text-sm font-medium text-[#1C1C1E] mb-3">تفضيل الجنس</p>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { value: 'any', label: 'الجميع', icon: '🤝' },
+                  { value: 'male', label: 'ذكور', icon: '👦' },
+                  { value: 'female', label: 'إناث', icon: '👩' },
+                ].map(opt => (
+                  <label
+                    key={opt.value}
+                    className={`flex flex-col items-center justify-center gap-2 py-4 rounded-2xl border-2 cursor-pointer transition-all select-none ${
+                      selectedGender === opt.value
+                        ? 'border-[#0071E3] bg-[#EAF2FF]'
+                        : 'border-[rgba(60,60,67,0.12)] bg-white hover:border-[rgba(60,60,67,0.25)]'
+                    }`}
+                  >
+                    <input type="radio" value={opt.value} {...register('gender_preference')} className="sr-only" />
+                    <span className="text-2xl">{opt.icon}</span>
+                    <span className={`text-xs font-semibold ${selectedGender === opt.value ? 'text-[#0071E3]' : 'text-[#1C1C1E]'}`}>
+                      {opt.label}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Lifestyle tags */}
+            <div>
+              <p className="text-sm font-medium text-[#1C1C1E] mb-1">نمط الحياة</p>
+              <p className="text-xs text-[#8E8E93] mb-3">اختر ما يصف وضعك وما تبحث عنه</p>
+              <div className="flex flex-wrap gap-2" dir="rtl">
+                {LIFESTYLE_TAGS.map(tag => {
+                  const isSelected = selectedTags.includes(tag)
+                  return (
+                    <label
+                      key={tag}
+                      className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full border cursor-pointer transition-all text-sm select-none ${
+                        isSelected
+                          ? 'border-[#0071E3] bg-[#0071E3] text-white'
+                          : 'border-[rgba(60,60,67,0.12)] bg-white text-[#1C1C1E] hover:border-[rgba(60,60,67,0.3)]'
+                      }`}
+                    >
+                      <input type="checkbox" value={tag} {...register('tags')} className="sr-only" />
+                      <span className="font-medium">{tag}</span>
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* ════ STEP 4 — DESCRIPTION + PHOTOS ════ */}
+        {step === 4 && (
+          <div className="flex flex-col gap-5 pt-1">
+
+            {/* Error banner */}
+            {error && (
+              <div className="bg-[#FFF0EE] border border-[#FF3B30]/20 text-[#FF3B30] rounded-xl px-4 py-3 text-sm font-medium">
+                {error}
+              </div>
+            )}
+
+            {/* Description */}
+            <div>
+              <div className="flex justify-between items-end mb-2">
+                <label className="block text-sm font-medium text-[#1C1C1E]">
+                  الوصف التفصيلي <span className="text-[#FF3B30]">*</span>
+                </label>
+                <div className={`text-[11px] font-semibold px-2 py-0.5 rounded-full transition-colors ${
+                  isDescriptionValid ? 'bg-[#EAF2FF] text-[#0071E3]' : 'bg-[#F2F2F7] text-[#8E8E93]'
+                }`}>
+                  {descriptionValue.length} / 20 حرف كحد أدنى
+                </div>
+              </div>
+              <textarea
+                {...register('description')}
+                dir="rtl"
+                rows={5}
+                placeholder={`صف ما تقدمه أو ما تبحث عنه...\n- تجهيزات السكن\n- نمط الحياة المفضل\n- تفاصيل أخرى`}
+                className="w-full bg-[#F2F2F7] border-2 border-transparent rounded-xl px-4 py-3.5 text-sm font-medium text-[#1C1C1E] placeholder:text-[#AEAEB2] placeholder:leading-relaxed focus:outline-none focus:border-[#0071E3] focus:bg-white transition-all resize-none leading-relaxed"
+              />
+              {errors.description && <p className="text-[#FF3B30] text-xs mt-1.5 font-medium">{errors.description.message}</p>}
+            </div>
+
+            {/* Photos — only for room_available */}
+            {listingType === 'room_available' && (
+              <div>
+                <label className="block text-sm font-medium text-[#1C1C1E] mb-1">الصور</label>
+                <p className="text-xs text-[#8E8E93] mb-3">اختياري — الإعلانات بصور تحصل على 3× اهتمام أكثر</p>
+                <div className="bg-[#F2F2F7] rounded-2xl p-3 border-2 border-dashed border-[rgba(60,60,67,0.15)]">
+                  <ImageUploader files={photos} onChange={setPhotos} maxFiles={5} />
+                </div>
+              </div>
+            )}
+
+            {/* Disclaimer */}
+            <p className="text-[11px] text-[#AEAEB2] text-center leading-relaxed">
+              بالنشر أنت توافق على سياسة المحتوى الخاصة بـ moncoloc.ma
+            </p>
+          </div>
+        )}
+
+      </div>
+      {/* ── end content ── */}
+
+      {/* ── Navigation footer ── */}
+      <div className="px-6 py-4 border-t border-[rgba(60,60,67,0.08)] flex items-center gap-3 bg-white">
+        {step > 1 ? (
+          <button
+            type="button"
+            onClick={goBack}
+            className="w-11 h-11 rounded-full border-2 border-[rgba(60,60,67,0.15)] flex items-center justify-center text-[#1C1C1E] hover:border-[#0071E3] hover:text-[#0071E3] transition-all flex-shrink-0 active:scale-95"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7" />
+            </svg>
           </button>
-        </div>
-      </form>
-    </div>
+        ) : (
+          <div className="w-11 flex-shrink-0" />
+        )}
+
+        {step < TOTAL_STEPS ? (
+          <button
+            type="button"
+            onClick={goNext}
+            className="flex-1 bg-[#0071E3] hover:bg-[#0058b0] text-white font-semibold text-sm py-3 rounded-full transition-all active:scale-[0.98] shadow-[0_4px_14px_rgba(0,113,227,0.30)]"
+          >
+            التالي
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="flex-1 bg-[#0071E3] hover:bg-[#0058b0] disabled:opacity-60 text-white font-semibold text-sm py-3 rounded-full transition-all active:scale-[0.98] shadow-[0_4px_14px_rgba(0,113,227,0.30)] flex items-center justify-center gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>جاري النشر...</span>
+              </>
+            ) : (
+              'نشر الإعلان'
+            )}
+          </button>
+        )}
+      </div>
+
+    </form>
   )
 }

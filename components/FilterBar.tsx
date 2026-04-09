@@ -34,74 +34,77 @@ export default function FilterBar({ onFilter, initialFilters }: FilterBarProps) 
   }
 
   return (
-    <div className="card-widget p-4">
-      <h3 className="text-xs font-bold text-[#787C7E] uppercase mb-4 tracking-wider">التصنيف والبحث</h3>
+    <div className="card-widget overflow-hidden shadow-sm">
+      <div className="sidebar-widget-header px-4 py-3 text-[11px] font-black tracking-widest uppercase opacity-90">
+         فلترة المنشورات
+      </div>
       
-      <div className="flex flex-col gap-5">
+      <div className="p-5 flex flex-col gap-6">
         {/* Search */}
         <div>
-          <label className="block text-xs font-bold text-[#1c1c1c] mb-1.5">بحث عن كلمات</label>
+          <label className="block text-[10px] font-black text-[#878A8C] uppercase mb-2 tracking-wider">بحث كلمات</label>
           <div className="relative">
             <input
               type="text"
-              placeholder="مثال: أكدال، طالب، هادئ..."
+              placeholder="مثال: أكدال، هادئ..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#f6f7f8] border border-[#edeff1] text-[#1c1c1c] text-sm rounded hover:border-[#0079D3] hover:bg-white focus:bg-white focus:border-[#0079D3] focus:outline-none transition-colors px-3 py-2 pl-8"
+              className="w-full bg-[#f6f7f8] border border-[#edeff1] text-[#1c1c1c] text-sm rounded-md px-3 py-2 pl-9 hover:border-[#0079D3] focus:bg-white focus:border-[#0079D3] focus:outline-none transition-all placeholder:text-[#AEAEB2]"
             />
             <div className="absolute top-1/2 left-3 transform -translate-y-1/2 pointer-events-none text-[#878A8C]">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>
           </div>
         </div>
 
         {/* City */}
         <div>
-          <label className="block text-xs font-bold text-[#1c1c1c] mb-1.5">المدينة</label>
+          <label className="block text-[10px] font-black text-[#878A8C] uppercase mb-2 tracking-wider">المدينة</label>
           <div className="relative">
             <select
               value={filters.city}
               onChange={(e) => update({ city: e.target.value })}
-              className="w-full bg-[#f6f7f8] border border-[#edeff1] text-[#1c1c1c] text-sm rounded hover:border-[#0079D3] hover:bg-white focus:bg-white focus:border-[#0079D3] focus:outline-none transition-colors px-3 py-2 appearance-none pr-8 cursor-pointer"
+              className="w-full bg-[#f6f7f8] border border-[#edeff1] text-[#1c1c1c] text-sm rounded-md px-3 py-2 pr-9 appearance-none hover:border-[#0079D3] focus:bg-white focus:border-[#0079D3] focus:outline-none transition-all cursor-pointer"
             >
-              <option value="all">كل المدن</option>
+              <option value="all">الكل (المغرب)</option>
               {CITIES.map((city) => (
                 <option key={city} value={city}>{city}</option>
               ))}
             </select>
             <div className="absolute top-1/2 right-3 transform -translate-y-1/2 pointer-events-none text-[#878A8C]">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7"></path></svg>
             </div>
           </div>
         </div>
 
-        {/* Type */}
+        {/* Type Feed Toggle (Reddit Style) */}
         <div>
-          <label className="block text-xs font-bold text-[#1c1c1c] mb-1.5">نوع الإعلان</label>
-          <div className="flex flex-col gap-1.5">
-            {[
-              { value: 'all', label: 'الكل' },
-              { value: 'room_available', label: 'لدي غرفة للإيجار' },
-              { value: 'looking_for_roommate', label: 'أبحث عن غرفة / شريك' },
-            ].map((opt) => (
-              <label 
-                key={opt.value} 
-                className="flex items-center gap-2 cursor-pointer group"
-                onClick={() => update({ type: opt.value as 'all' | ListingType })}
-              >
-                <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${filters.type === opt.value ? 'bg-[#0079D3] border-[#0079D3]' : 'border-[#ccc] bg-white group-hover:border-[#0079D3]'}`}>
-                  {filters.type === opt.value && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
-                </div>
-                <span className={`text-sm ${filters.type === opt.value ? 'font-medium text-[#1c1c1c]' : 'text-[#787C7E]'}`}>{opt.label}</span>
-              </label>
-            ))}
-          </div>
+           <label className="block text-[10px] font-black text-[#878A8C] uppercase mb-2 tracking-wider">نوع الخلاصة</label>
+           <div className="flex flex-col gap-1">
+              {[
+                { value: 'all', label: 'الكل' },
+                { value: 'room_available', label: 'عروض السكن' },
+                { value: 'looking_for_roommate', label: 'طلبات السكن' },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => update({ type: opt.value as 'all' | ListingType })}
+                  className={`text-right px-3 py-2 text-sm rounded-md font-bold transition-all ${
+                    filters.type === opt.value 
+                      ? 'bg-[#f6f7f8] text-[#0079D3]' 
+                      : 'text-[#1c1c1c] hover:bg-[#f6f7f8] hover:text-[#0079D3]'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+           </div>
         </div>
 
-        {/* Gender */}
+        {/* Gender Toggle */}
         <div>
-          <label className="block text-xs font-bold text-[#1c1c1c] mb-1.5">التفضيل الجنسي</label>
-          <div className="flex gap-2">
+          <label className="block text-[10px] font-black text-[#878A8C] uppercase mb-2 tracking-wider">سكن لـ</label>
+          <div className="flex bg-[#f6f7f8] p-1 rounded-md border border-[#edeff1]">
             {[
               { value: 'all', label: 'الكل' },
               { value: 'male', label: 'ذكور' },
@@ -109,11 +112,14 @@ export default function FilterBar({ onFilter, initialFilters }: FilterBarProps) 
             ].map((opt) => (
               <button
                 key={opt.value}
-                onClick={() => update({ genderPreference: opt.value as FilterState['genderPreference'] })}
-                className={`flex-1 py-1 px-2 rounded-full text-xs font-bold transition-colors ${
+                onClick={(e) => {
+                  e.preventDefault()
+                  update({ genderPreference: opt.value as FilterState['genderPreference'] })
+                }}
+                className={`flex-1 py-1.5 px-1 rounded-md text-[11px] font-black uppercase transition-all ${
                   filters.genderPreference === opt.value
-                    ? 'bg-[#E9ECEF] text-[#1c1c1c]'
-                    : 'bg-white text-[#787C7E] hover:bg-[#f6f7f8]'
+                    ? 'bg-white text-[#0079D3] shadow-sm ring-1 ring-black/5'
+                    : 'text-[#878A8C] hover:text-[#1c1c1c]'
                 }`}
               >
                 {opt.label}
@@ -122,24 +128,24 @@ export default function FilterBar({ onFilter, initialFilters }: FilterBarProps) 
           </div>
         </div>
 
-        {/* Price */}
+        {/* Price Range */}
         <div>
-          <label className="block text-xs font-bold text-[#1c1c1c] mb-1.5">السعر (د.م)</label>
+          <label className="block text-[10px] font-black text-[#878A8C] uppercase mb-2 tracking-wider">الميزانية (د.م)</label>
           <div className="flex items-center gap-2">
             <input
               type="number"
               placeholder="من"
               value={filters.minPrice || ''}
               onChange={(e) => update({ minPrice: Number(e.target.value) || 0 })}
-              className="flex-1 min-w-0 bg-[#f6f7f8] border border-[#edeff1] rounded px-2 py-1.5 text-sm hover:border-[#0079D3] focus:border-[#0079D3] focus:bg-white focus:outline-none transition-colors"
+              className="flex-1 min-w-0 bg-[#f6f7f8] border border-[#edeff1] rounded-md px-3 py-2 text-sm hover:border-[#0079D3] focus:border-[#0079D3] focus:bg-white focus:outline-none transition-all placeholder:text-[#AEAEB2]"
             />
-            <span className="text-[#878A8C]">-</span>
+            <span className="text-[#878A8C] font-bold">-</span>
             <input
               type="number"
               placeholder="إلى"
               value={filters.maxPrice || ''}
               onChange={(e) => update({ maxPrice: Number(e.target.value) || 0 })}
-              className="flex-1 min-w-0 bg-[#f6f7f8] border border-[#edeff1] rounded px-2 py-1.5 text-sm hover:border-[#0079D3] focus:border-[#0079D3] focus:bg-white focus:outline-none transition-colors"
+              className="flex-1 min-w-0 bg-[#f6f7f8] border border-[#edeff1] rounded-md px-3 py-2 text-sm hover:border-[#0079D3] focus:border-[#0079D3] focus:bg-white focus:outline-none transition-all placeholder:text-[#AEAEB2]"
             />
           </div>
         </div>
@@ -152,9 +158,9 @@ export default function FilterBar({ onFilter, initialFilters }: FilterBarProps) 
             setFilters(reset)
             onFilter(reset)
           }}
-          className="w-full mt-2 py-1.5 px-3 rounded text-sm font-bold text-[#0079D3] hover:bg-[#E9ECEF] transition-colors"
+          className="w-full mt-2 py-2 px-3 rounded-md text-sm font-bold text-[#0079D3] hover:bg-[#f6f7f8] transition-all border border-transparent hover:border-[#edeff1]"
         >
-          إعادة ضبط
+          إعادة ضبط الفلاتر
         </button>
       </div>
     </div>
